@@ -1,0 +1,781 @@
+/* ===== 14-Day Plan Data ===== */
+const PLAN = [
+  {
+    day:1, title:'排序与分治开场', goal:'把"模板"和"统计贡献"分清楚',
+    problems:[
+      {id:'P1177',name:'【模板】排序',desc:'先用 sort 过一遍，再手写快排/归并至少一种',mustReview:false},
+      {id:'P1908',name:'逆序对',desc:'重点体会"答案在 merge 时产生"',mustReview:true}
+    ],
+    reflections:['快排和归并，你更顺手哪个？','逆序对里 res += mid - i + 1 为什么成立？']
+  },
+  {
+    day:2, title:'二分与边界感', goal:'不再把二分写成玄学',
+    problems:[
+      {id:'P2249',name:'查找',desc:'练左边界、右边界',mustReview:true}
+    ],
+    reflections:['我找的是"值"还是"分界线"？','为什么 l=mid 时要上取中？']
+  },
+  {
+    day:3, title:'高精度', goal:'训练"把手算竖式翻译成代码"',
+    problems:[
+      {id:'P1601',name:'A+B Problem（高精）',desc:'高精度加法',mustReview:false},
+      {id:'P2142',name:'高精度减法',desc:'高精度减法',mustReview:false},
+      {id:'P1303',name:'A*B Problem',desc:'高精度乘法（余力补充）',mustReview:false,optional:true}
+    ],
+    reflections:['低位在前存储为什么方便？','减法里借位变量到底表示什么？']
+  },
+  {
+    day:4, title:'前缀和 / 差分', goal:'区分"频繁查询"和"频繁修改"',
+    problems:[
+      {id:'P3397',name:'地毯',desc:'二维差分标准题',mustReview:true}
+    ],
+    reflections:['前缀和与差分分别适合哪类题？','二维差分为什么是"加减减加"？']
+  },
+  {
+    day:5, title:'单调栈 / 滑动窗口', goal:'开始培养"维护结构"的手感',
+    problems:[
+      {id:'P5788',name:'【模板】单调栈',desc:'右边第一个更大元素',mustReview:false},
+      {id:'P1886',name:'滑动窗口 / 单调队列',desc:'最经典窗口最值',mustReview:true}
+    ],
+    reflections:['队列里为什么存"下标"而不是"值"？','被弹掉的元素为什么永远不可能再成为答案？']
+  },
+  {
+    day:6, title:'KMP 与 Trie', goal:'进入"字符串结构化处理"',
+    problems:[
+      {id:'P3375',name:'【模板】KMP',desc:'KMP 模板',mustReview:true},
+      {id:'P2580',name:'于是他错误的点名开始了',desc:'Trie 入门',mustReview:false}
+    ],
+    reflections:['next 数组的含义是什么？','Trie 的每个节点到底在表示什么？']
+  },
+  {
+    day:7, title:'并查集 + 基础图搜索', goal:'进入图论，先拿最稳的两把刀',
+    problems:[
+      {id:'P3367',name:'【模板】并查集',desc:'并查集模板',mustReview:false},
+      {id:'P1746',name:'离开中山路',desc:'网格 BFS',mustReview:false}
+    ],
+    reflections:['并查集的 find 为什么要路径压缩？','BFS 为什么天然适合无权最短路？']
+  },
+  {
+    day:8, title:'DFS / 回溯', goal:'练"搜索树"和剪枝意识',
+    problems:[
+      {id:'P1219',name:'八皇后 / N皇后',desc:'回溯专题核心题',mustReview:false}
+    ],
+    reflections:['这一题的状态有哪些？','哪些判断是在"进入递归前"做的？']
+  },
+  {
+    day:9, title:'拓扑排序 + 最短路', goal:'建立图论的"模型识别"能力',
+    problems:[
+      {id:'P1113',name:'杂务',desc:'拓扑排序 + DP',mustReview:false},
+      {id:'P4779',name:'单源最短路径（标准版）',desc:'堆优化 Dijkstra',mustReview:true}
+    ],
+    reflections:['拓扑排序里入度数组在维护什么？','Dijkstra 为什么不能处理负边？']
+  },
+  {
+    day:10, title:'快速幂 + 线性筛', goal:'数论先抓最高频、最常考的两类',
+    problems:[
+      {id:'P1226',name:'【模板】快速幂',desc:'快速幂模板',mustReview:false},
+      {id:'P3383',name:'线性筛素数',desc:'线性筛模板',mustReview:false}
+    ],
+    reflections:['快速幂为什么能把指数复杂度降下来？','线性筛为什么每个合数只会被"最小质因子"筛掉一次？']
+  },
+  {
+    day:11, title:'扩欧 / 同余 + 01背包', goal:'从数论切到 DP，开始练"状态定义"',
+    problems:[
+      {id:'P1082',name:'【模板】同余方程',desc:'扩展欧几里得',mustReview:false},
+      {id:'P1048',name:'采药',desc:'01 背包标准入门',mustReview:true}
+    ],
+    reflections:['扩欧求出来的 x, y 满足什么式子？','01 背包里 f[j] 的定义是什么？']
+  },
+  {
+    day:12, title:'完全背包 + 线性DP', goal:'分清"倒序枚举"和"正序枚举"',
+    problems:[
+      {id:'P1616',name:'疯狂的采药',desc:'完全背包',mustReview:false},
+      {id:'P1216',name:'数字三角形',desc:'线性 DP 经典题',mustReview:false}
+    ],
+    reflections:['为什么完全背包内层循环要正序？','数字三角形的边界怎么处理最稳？']
+  },
+  {
+    day:13, title:'最大子段和 + 贪心开场', goal:'感受"DP"和"贪心"是两种不同的世界观',
+    problems:[
+      {id:'P1115',name:'最大子段和',desc:'经典 DP',mustReview:false},
+      {id:'P1090',name:'合并果子',desc:'堆贪心 / Huffman 原型',mustReview:true}
+    ],
+    reflections:['最大子段和里"以 i 结尾"的含义是什么？','合并果子为什么每次合并最小两堆是最优的？']
+  },
+  {
+    day:14, title:'区间贪心收束', goal:'给这两周画上"考试可用"的句号',
+    problems:[
+      {id:'P1803',name:'凌乱的 yyy / 线段覆盖',desc:'最大不相交区间',mustReview:false},
+      {id:'P2240',name:'部分背包问题',desc:'单位价值排序的贪心',mustReview:false}
+    ],
+    reflections:['区间类题什么时候按右端点排序？','部分背包为什么能贪，01 背包为什么不能？']
+  }
+];
+
+const REVIEW_TOTAL = PLAN.flatMap(d => d.problems).filter(p => p.mustReview).length;
+const STORAGE_KEY = 'kotori-luogu-v1';
+const EMOJIS = ['✿','❀','🌸','⭐','💫','🎀','🦋','🌙'];
+
+/* ===== State ===== */
+let state = {
+  currentDay: 1,
+  currentTab: 'plan',
+  progress: {},
+  notes: {},
+  wrongNotes: {},
+  journals: {},
+  customProblems: {},
+  settings: {
+    obsidianVault: 'Obsidian Vault',
+    obsidianFolder: '',
+    githubRepo: '',
+    musicIds: [],
+    backgrounds: [],
+    currentBg: -1
+  }
+};
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) { console.warn('Save failed', e); }
+}
+function load() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) {
+      const parsed = JSON.parse(d);
+      state = {...state, ...parsed, settings: {...state.settings, ...(parsed.settings||{})}};
+      if (!state.customProblems) state.customProblems = {};
+    }
+  } catch(e) { console.warn('Load failed', e); }
+}
+
+/* ===== Dynamic problem list (built-in + custom) ===== */
+function getAllProblems() {
+  const builtIn = PLAN.flatMap(d => d.problems.map(p => ({...p, day: d.day})));
+  const custom = [];
+  for (const [day, probs] of Object.entries(state.customProblems)) {
+    probs.forEach(p => custom.push({...p, day: +day, isCustom: true}));
+  }
+  return [...builtIn, ...custom];
+}
+function getTotal() { return getAllProblems().length; }
+
+/* ===== Particles ===== */
+function initParticles() {
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('span');
+    p.className = 'particle';
+    p.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    p.style.left = Math.random()*100 + '%';
+    p.style.animationDelay = Math.random()*6 + 's';
+    p.style.animationDuration = (5 + Math.random()*4) + 's';
+    c.appendChild(p);
+  }
+}
+
+/* ===== Progress Helpers ===== */
+function getStatus(pid) { return (state.progress[pid] || {}).status || 'not_started'; }
+function setStatus(pid, s) {
+  if (!state.progress[pid]) state.progress[pid] = {};
+  state.progress[pid].status = s;
+  save(); renderAll();
+}
+
+function getCompleted() { return getAllProblems().filter(p => getStatus(p.id)==='completed').length; }
+function getWrong() { return getAllProblems().filter(p => getStatus(p.id)==='wrong').length; }
+function getReviewed() { return getAllProblems().filter(p => p.mustReview && getStatus(p.id)==='completed').length; }
+
+function getDayStatus(day) {
+  const builtIn = PLAN[day-1].problems;
+  const custom = state.customProblems[day] || [];
+  const all = [...builtIn, ...custom];
+  if (!all.length) return 'pending';
+  const statuses = all.map(p => getStatus(p.id));
+  if (statuses.every(s => s==='completed')) return 'done';
+  if (statuses.some(s => s!=='not_started')) return 'partial';
+  return 'pending';
+}
+
+/* ===== Render ===== */
+function renderAll() {
+  renderProgress();
+  renderDayNav();
+  renderTabContent();
+}
+
+function renderProgress() {
+  const done = getCompleted();
+  const total = getTotal();
+  const pct = total ? Math.round(done/total*100) : 0;
+  const circumference = 2 * Math.PI * 52;
+  const offset = circumference - (pct/100) * circumference;
+
+  document.getElementById('progress-ring').style.strokeDashoffset = offset;
+  document.getElementById('progress-percent').textContent = pct + '%';
+  document.getElementById('progress-count').textContent = done + '/' + total;
+  document.getElementById('stat-completed').textContent = '✅ ' + done + ' 完成';
+  document.getElementById('stat-wrong').textContent = '❌ ' + getWrong() + ' 错题';
+  document.getElementById('stat-review').textContent = '⭐ ' + getReviewed() + '/' + REVIEW_TOTAL + ' 二刷';
+}
+
+function renderDayNav() {
+  const nav = document.getElementById('day-nav');
+  nav.innerHTML = PLAN.map(d => {
+    const ds = getDayStatus(d.day);
+    const icon = ds==='done' ? '✅' : ds==='partial' ? '🔶' : '';
+    const active = d.day===state.currentDay ? ' active' : '';
+    return `<button class="day-btn${active}" data-day="${d.day}">
+      <span class="day-num">Day ${d.day}</span>
+      <span class="day-label">${d.title.substring(0,5)}</span>
+      <span class="day-status">${icon}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderTabContent() {
+  if (state.currentTab==='plan') renderPlan();
+  else if (state.currentTab==='wrong') renderWrongNotebook();
+  else if (state.currentTab==='journal') renderJournal();
+}
+
+/* ===== Plan Tab ===== */
+function renderPlan() {
+  const d = PLAN[state.currentDay-1];
+  const dayNum = state.currentDay;
+
+  let html = `<div class="day-header">
+    <h2>Day ${d.day}：${d.title}</h2>
+    <p class="day-goal">目标：${d.goal}</p>
+  </div>`;
+
+  // Built-in problems
+  d.problems.forEach(p => { html += renderProblemCard(p, dayNum, false); });
+
+  // Custom problems
+  const customs = state.customProblems[dayNum] || [];
+  customs.forEach(p => { html += renderProblemCard(p, dayNum, true); });
+
+  // Add problem form
+  html += `<div class="add-problem-section">
+    <h4>➕ 添加额外题目</h4>
+    <div class="add-problem-row">
+      <input type="text" id="add-pid" placeholder="题号 (如 P1234)">
+      <input type="text" id="add-pname" placeholder="题目名称 (选填)">
+      <button class="btn btn-orange btn-sm" id="add-problem-btn">添加</button>
+    </div>
+  </div>`;
+
+  // Reflections
+  if (d.reflections.length) {
+    html += `<div class="reflections"><h3>🤔 做完后思考</h3>`;
+    d.reflections.forEach(r => {
+      html += `<div class="reflection-item"><span class="icon">💡</span><span>${r}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  document.getElementById('tab-plan').innerHTML = html;
+}
+
+function renderProblemCard(p, dayNum, isCustom) {
+  const luoguUrl = id => `https://www.luogu.com.cn/problem/${id}`;
+  const s = getStatus(p.id);
+  const note = state.notes[p.id] || '';
+  const wn = state.wrongNotes[p.id] || {};
+  const badges = [];
+  if (p.mustReview) badges.push('<span class="badge badge-review">⭐ 需二刷</span>');
+  if (p.optional) badges.push('<span class="badge badge-optional">选做</span>');
+  if (isCustom) badges.push('<span class="badge badge-custom">自定义</span>');
+
+  const deleteBtn = isCustom
+    ? `<button class="custom-problem-delete" data-del-pid="${p.id}" data-del-day="${dayNum}" title="删除此题">✕</button>`
+    : '';
+
+  return `<div class="problem-card status-${s}" data-pid="${p.id}">
+    <div class="problem-top">
+      <div class="problem-info">
+        <span class="problem-id"><a href="${luoguUrl(p.id)}" target="_blank">${p.id}</a></span>
+        <span class="problem-name">${escHtml(p.name || '')}</span>
+        ${badges.join(' ')}
+        ${deleteBtn}
+      </div>
+      <div class="status-selector">
+        ${statusBtn(p.id,'not_started','⬜ 未开始',s)}
+        ${statusBtn(p.id,'in_progress','🔄 进行中',s)}
+        ${statusBtn(p.id,'completed','✅ 完成',s)}
+        ${statusBtn(p.id,'wrong','❌ 做错',s)}
+      </div>
+    </div>
+    ${p.desc ? `<div class="problem-desc">${escHtml(p.desc)}</div>` : ''}
+    <div class="problem-actions">
+      <button class="expand-toggle${note?' open':''}" data-target="note-${p.id}">📝 笔记</button>
+      <button class="expand-toggle${(wn.error||wn.correct)?' open':''}" data-target="wrong-${p.id}">📕 错题记录</button>
+    </div>
+    <div class="expandable${note?' open':''}" id="note-${p.id}">
+      <div class="note-area">
+        <textarea placeholder="记录你的思路、解法、收获..." data-note="${p.id}">${escHtml(note)}</textarea>
+      </div>
+    </div>
+    <div class="expandable${(wn.error||wn.correct)?' open':''}" id="wrong-${p.id}">
+      <div class="wrong-area">
+        <label>错误原因</label>
+        <textarea placeholder="第一次做错在哪里？" data-wrong-error="${p.id}">${escHtml(wn.error||'')}</textarea>
+        <label>正确思路</label>
+        <textarea placeholder="正解的核心是什么？" data-wrong-correct="${p.id}">${escHtml(wn.correct||'')}</textarea>
+        <label>关键词 / 题型标签</label>
+        <textarea placeholder="下次看到什么关键词要想到它？" data-wrong-keywords="${p.id}" style="min-height:40px">${escHtml(wn.keywords||'')}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function statusBtn(pid, val, label, current) {
+  const cls = current===val ? ` active-${val}` : '';
+  return `<button class="status-btn${cls}" data-pid="${pid}" data-status="${val}">${label}</button>`;
+}
+
+/* ===== Wrong Notebook Tab ===== */
+function renderWrongNotebook() {
+  const wrongs = getAllProblems().filter(p => getStatus(p.id)==='wrong');
+  const el = document.getElementById('tab-wrong');
+
+  if (!wrongs.length) {
+    el.innerHTML = `<div class="wrong-notebook-empty">
+      <div class="big-icon">📖</div>
+      <p>暂无错题记录~</p>
+      <p style="font-size:13px;margin-top:4px;">把做错的题标记为 ❌，它就会出现在这里</p>
+    </div>`;
+    return;
+  }
+
+  let html = `<div class="day-header" style="border-left-color:var(--danger)">
+    <h2>📕 错题本</h2>
+    <p class="day-goal">共 ${wrongs.length} 道错题，加油复盘！</p>
+  </div>`;
+
+  wrongs.forEach(p => {
+    const wn = state.wrongNotes[p.id] || {};
+    html += `<div class="wrong-entry">
+      <div class="wrong-entry-header">
+        <span class="wrong-entry-id"><a href="https://www.luogu.com.cn/problem/${p.id}" target="_blank">${p.id} ${escHtml(p.name||'')}</a></span>
+        <span class="wrong-entry-day">Day ${p.day}${p.isCustom?' (自定义)':''}</span>
+      </div>
+      ${wrongDetail('错误原因', wn.error)}
+      ${wrongDetail('正确思路', wn.correct)}
+      ${wrongDetail('关键词', wn.keywords)}
+      <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="setStatus('${p.id}','completed')">✅ 已复盘，标记完成</button>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function wrongDetail(label, content) {
+  if (!content) return '';
+  return `<div class="wrong-detail">
+    <div class="wrong-detail-label">${label}</div>
+    <div class="wrong-detail-content">${escHtml(content)}</div>
+  </div>`;
+}
+
+/* ===== Journal Tab ===== */
+function renderJournal() {
+  const el = document.getElementById('tab-journal');
+  let html = '';
+
+  for (let i = 1; i <= 14; i++) {
+    const entries = state.journals[i] || [];
+    const isActive = i === state.currentDay;
+    html += `<div class="journal-day${isActive?' active-day':''}">
+      <div class="journal-day-title">💭 Day ${i}：${PLAN[i-1].title}</div>
+      <div class="journal-entries">`;
+
+    if (entries.length) {
+      entries.forEach((e, idx) => {
+        html += `<div class="journal-entry">
+          <div class="journal-entry-date">${e.date}</div>
+          <div class="journal-entry-content">${escHtml(e.content)}</div>
+          <button class="journal-entry-delete" data-day="${i}" data-idx="${idx}" title="删除">✕</button>
+        </div>`;
+      });
+    }
+
+    html += `</div>
+      <div class="journal-input-row">
+        <textarea placeholder="记录今天的感想、心情、收获..." id="journal-input-${i}"></textarea>
+        <button class="btn btn-primary btn-sm" data-journal-add="${i}">发送</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+/* ===== Music ===== */
+function renderMusic() {
+  const c = document.getElementById('music-container');
+  const ids = state.settings.musicIds;
+  if (!ids.length) {
+    c.innerHTML = '<p class="empty-hint">在设置中添加网易云音乐~</p>';
+    return;
+  }
+  c.innerHTML = ids.map(id =>
+    `<iframe frameborder="no" border="0" marginwidth="0" marginheight="0"
+      width="100%" height="86"
+      src="https://music.163.com/outchain/player?type=2&id=${id}&auto=0&height=66"
+      style="margin-bottom:6px;border-radius:8px"></iframe>`
+  ).join('');
+}
+
+function renderMusicManageList() {
+  const el = document.getElementById('music-manage-list');
+  const ids = state.settings.musicIds;
+  if (!ids.length) { el.innerHTML = '<p class="empty-hint">暂未添加音乐</p>'; return; }
+  el.innerHTML = ids.map((id, i) =>
+    `<div class="music-manage-item">
+      <span>🎵 歌曲 ID: ${id}</span>
+      <button data-music-del="${i}" title="删除">✕</button>
+    </div>`
+  ).join('');
+}
+
+/* ===== Background ===== */
+function applyBackground() {
+  const bg = document.getElementById('bg-layer');
+  const idx = state.settings.currentBg;
+  const bgs = state.settings.backgrounds;
+  if (idx >= 0 && bgs[idx]) {
+    bg.style.backgroundImage = `url(${bgs[idx]})`;
+    bg.classList.add('has-bg');
+  } else {
+    bg.style.backgroundImage = '';
+    bg.classList.remove('has-bg');
+  }
+}
+
+function renderBgPreviews() {
+  const el = document.getElementById('bg-preview-list');
+  const bgs = state.settings.backgrounds;
+  el.innerHTML = bgs.map((url, i) =>
+    `<div class="bg-preview-item${state.settings.currentBg===i?' active':''}" data-bg-select="${i}">
+      <img src="${url}" alt="bg ${i+1}">
+      <button class="bg-preview-delete" data-bg-del="${i}">✕</button>
+    </div>`
+  ).join('');
+}
+
+/* ===== Settings ===== */
+function openSettings() {
+  document.getElementById('set-obsidian-vault').value = state.settings.obsidianVault;
+  document.getElementById('set-obsidian-folder').value = state.settings.obsidianFolder;
+  document.getElementById('set-github-repo').value = state.settings.githubRepo;
+  renderBgPreviews();
+  renderMusicManageList();
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  state.settings.obsidianVault = document.getElementById('set-obsidian-vault').value.trim() || 'Obsidian Vault';
+  state.settings.obsidianFolder = document.getElementById('set-obsidian-folder').value.trim();
+  state.settings.githubRepo = document.getElementById('set-github-repo').value.trim();
+  save();
+  updateHeaderLinks();
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function updateHeaderLinks() {
+  const vault = encodeURIComponent(state.settings.obsidianVault);
+  const folder = state.settings.obsidianFolder;
+  const obsLink = document.getElementById('obsidian-link');
+  obsLink.href = `obsidian://open?vault=${vault}${folder ? '&file='+encodeURIComponent(folder) : ''}`;
+
+  const ghLink = document.getElementById('github-link');
+  ghLink.href = state.settings.githubRepo || '#';
+}
+
+function parseMusicId(input) {
+  input = input.trim();
+  if (/^\d+$/.test(input)) return input;
+  const m = input.match(/[?&]id=(\d+)/);
+  if (m) return m[1];
+  const m2 = input.match(/song\/(\d+)/);
+  if (m2) return m2[1];
+  return null;
+}
+
+/* ===== Custom Problems ===== */
+function addCustomProblem(dayNum, pid, pname) {
+  pid = pid.trim().toUpperCase();
+  if (!pid) return;
+  if (!state.customProblems[dayNum]) state.customProblems[dayNum] = [];
+  // Prevent duplicate
+  const allIds = [...PLAN[dayNum-1].problems.map(p=>p.id), ...state.customProblems[dayNum].map(p=>p.id)];
+  if (allIds.includes(pid)) { alert('该题目已存在于当天列表中'); return; }
+  state.customProblems[dayNum].push({
+    id: pid,
+    name: pname.trim() || '',
+    desc: ''
+  });
+  save();
+  renderAll();
+}
+
+function deleteCustomProblem(dayNum, pid) {
+  if (!state.customProblems[dayNum]) return;
+  state.customProblems[dayNum] = state.customProblems[dayNum].filter(p => p.id !== pid);
+  if (!state.customProblems[dayNum].length) delete state.customProblems[dayNum];
+  // Clean up related data
+  delete state.progress[pid];
+  delete state.notes[pid];
+  delete state.wrongNotes[pid];
+  save();
+  renderAll();
+}
+
+/* ===== Data Export/Import ===== */
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kotori-luogu-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      state = {...state, ...d, settings:{...state.settings,...(d.settings||{})}};
+      if (!state.customProblems) state.customProblems = {};
+      save();
+      applyBackground();
+      renderMusic();
+      updateHeaderLinks();
+      renderAll();
+      alert('导入成功！');
+    } catch(err) { alert('导入失败：文件格式不正确'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ===== Utils ===== */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function now() {
+  return new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+/* ===== Auto-save textareas with debounce ===== */
+let saveTimer = null;
+function debounceSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 500);
+}
+
+/* ===== Event Setup ===== */
+function setupEvents() {
+  // Day navigation
+  document.getElementById('day-nav').addEventListener('click', e => {
+    const btn = e.target.closest('.day-btn');
+    if (!btn) return;
+    state.currentDay = +btn.dataset.day;
+    save(); renderAll();
+  });
+
+  // Tabs
+  document.querySelector('.tabs').addEventListener('click', e => {
+    if (!e.target.classList.contains('tab')) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    const tab = e.target.dataset.tab;
+    document.getElementById('tab-'+tab).classList.add('active');
+    state.currentTab = tab;
+    renderTabContent();
+  });
+
+  // Plan tab: status buttons, expand toggles, add/delete custom problems
+  document.getElementById('tab-plan').addEventListener('click', e => {
+    const statusBtnEl = e.target.closest('.status-btn');
+    if (statusBtnEl) { setStatus(statusBtnEl.dataset.pid, statusBtnEl.dataset.status); return; }
+
+    const toggle = e.target.closest('.expand-toggle');
+    if (toggle) {
+      toggle.classList.toggle('open');
+      const target = document.getElementById(toggle.dataset.target);
+      if (target) target.classList.toggle('open');
+      return;
+    }
+
+    // Add custom problem
+    if (e.target.id === 'add-problem-btn' || e.target.closest('#add-problem-btn')) {
+      const pid = document.getElementById('add-pid').value;
+      const pname = document.getElementById('add-pname').value;
+      addCustomProblem(state.currentDay, pid, pname);
+      return;
+    }
+
+    // Delete custom problem
+    const delBtn = e.target.closest('.custom-problem-delete');
+    if (delBtn) {
+      const pid = delBtn.dataset.delPid;
+      const day = +delBtn.dataset.delDay;
+      if (confirm(`确定删除题目 ${pid} 吗？`)) {
+        deleteCustomProblem(day, pid);
+      }
+    }
+  });
+
+  // Note & wrong-note textareas (delegated)
+  document.getElementById('tab-plan').addEventListener('input', e => {
+    const ta = e.target;
+    if (ta.dataset.note) {
+      state.notes[ta.dataset.note] = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.wrongError) {
+      if (!state.wrongNotes[ta.dataset.wrongError]) state.wrongNotes[ta.dataset.wrongError] = {};
+      state.wrongNotes[ta.dataset.wrongError].error = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.wrongCorrect) {
+      if (!state.wrongNotes[ta.dataset.wrongCorrect]) state.wrongNotes[ta.dataset.wrongCorrect] = {};
+      state.wrongNotes[ta.dataset.wrongCorrect].correct = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.wrongKeywords) {
+      if (!state.wrongNotes[ta.dataset.wrongKeywords]) state.wrongNotes[ta.dataset.wrongKeywords] = {};
+      state.wrongNotes[ta.dataset.wrongKeywords].keywords = ta.value;
+      debounceSave();
+    }
+  });
+
+  // Allow Enter in add-problem input
+  document.getElementById('tab-plan').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.target.id === 'add-pid' || e.target.id === 'add-pname')) {
+      e.preventDefault();
+      const pid = document.getElementById('add-pid').value;
+      const pname = document.getElementById('add-pname').value;
+      addCustomProblem(state.currentDay, pid, pname);
+    }
+  });
+
+  // Journal: add & delete
+  document.getElementById('tab-journal').addEventListener('click', e => {
+    const addBtn = e.target.closest('[data-journal-add]');
+    if (addBtn) {
+      const day = +addBtn.dataset.journalAdd;
+      const input = document.getElementById('journal-input-'+day);
+      const content = input.value.trim();
+      if (!content) return;
+      if (!state.journals[day]) state.journals[day] = [];
+      state.journals[day].push({date: now(), content});
+      save();
+      renderJournal();
+      return;
+    }
+    const delBtn = e.target.closest('.journal-entry-delete');
+    if (delBtn) {
+      const day = +delBtn.dataset.day;
+      const idx = +delBtn.dataset.idx;
+      if (state.journals[day]) {
+        state.journals[day].splice(idx, 1);
+        save();
+        renderJournal();
+      }
+    }
+  });
+
+  // Settings
+  document.getElementById('settings-btn').addEventListener('click', openSettings);
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => closeSettings());
+  });
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', () => closeSettings());
+  });
+
+  // Background upload
+  document.getElementById('bg-upload').addEventListener('change', e => {
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        state.settings.backgrounds.push(ev.target.result);
+        if (state.settings.currentBg < 0) state.settings.currentBg = 0;
+        save(); applyBackground(); renderBgPreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  });
+
+  // Background select & delete
+  document.getElementById('bg-preview-list').addEventListener('click', e => {
+    const sel = e.target.closest('[data-bg-select]');
+    if (sel && !e.target.closest('.bg-preview-delete')) {
+      state.settings.currentBg = +sel.dataset.bgSelect;
+      save(); applyBackground(); renderBgPreviews();
+      return;
+    }
+    const del = e.target.closest('[data-bg-del]');
+    if (del) {
+      const idx = +del.dataset.bgDel;
+      state.settings.backgrounds.splice(idx, 1);
+      if (state.settings.currentBg >= state.settings.backgrounds.length) {
+        state.settings.currentBg = state.settings.backgrounds.length - 1;
+      }
+      save(); applyBackground(); renderBgPreviews();
+    }
+  });
+
+  document.getElementById('bg-reset-btn').addEventListener('click', () => {
+    state.settings.currentBg = -1;
+    save(); applyBackground(); renderBgPreviews();
+  });
+
+  // Music add & delete
+  document.getElementById('music-add-btn').addEventListener('click', () => {
+    const input = document.getElementById('music-input');
+    const id = parseMusicId(input.value);
+    if (!id) { alert('请输入有效的网易云音乐链接或歌曲ID'); return; }
+    state.settings.musicIds.push(id);
+    save(); renderMusic(); renderMusicManageList();
+    input.value = '';
+  });
+  document.getElementById('music-manage-list').addEventListener('click', e => {
+    const del = e.target.closest('[data-music-del]');
+    if (del) {
+      state.settings.musicIds.splice(+del.dataset.musicDel, 1);
+      save(); renderMusic(); renderMusicManageList();
+    }
+  });
+
+  // Export / Import
+  document.getElementById('export-btn').addEventListener('click', exportData);
+  document.getElementById('import-file').addEventListener('change', e => {
+    if (e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // Keyboard: Esc to close modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSettings();
+  });
+}
+
+/* ===== Init ===== */
+function init() {
+  load();
+  initParticles();
+  updateHeaderLinks();
+  applyBackground();
+  renderMusic();
+  setupEvents();
+  renderAll();
+}
+
+document.addEventListener('DOMContentLoaded', init);
