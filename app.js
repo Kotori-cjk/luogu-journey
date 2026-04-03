@@ -125,6 +125,8 @@ let state = {
   wrongNotes: {},
   journals: {},
   customProblems: {},
+  starred: {},
+  starNotes: {},
   settings: {
     obsidianVault: 'Obsidian Vault',
     obsidianFolder: '',
@@ -145,6 +147,8 @@ function load() {
       const parsed = JSON.parse(d);
       state = {...state, ...parsed, settings: {...state.settings, ...(parsed.settings||{})}};
       if (!state.customProblems) state.customProblems = {};
+      if (!state.starred) state.starred = {};
+      if (!state.starNotes) state.starNotes = {};
     }
   } catch(e) { console.warn('Load failed', e); }
 }
@@ -174,6 +178,46 @@ function initParticles() {
   }
 }
 
+/* ===== Markdown & Image Helpers ===== */
+function renderMarkdown(text) {
+  if (!text) return '';
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({ breaks: true, gfm: true });
+    return marked.parse(text);
+  }
+  return escHtml(text).replace(/\n/g, '<br>');
+}
+
+function compressImage(file, maxWidth, quality) {
+  maxWidth = maxWidth || 800;
+  quality = quality || 0.7;
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function insertImageAtCursor(ta, dataUrl) {
+  const pos = ta.selectionStart || ta.value.length;
+  const before = ta.value.substring(0, pos);
+  const after = ta.value.substring(ta.selectionEnd || pos);
+  ta.value = before + (before.endsWith('\n')||!before ? '' : '\n') + `![image](${dataUrl})\n` + after;
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 /* ===== Progress Helpers ===== */
 function getStatus(pid) { return (state.progress[pid] || {}).status || 'not_started'; }
 function setStatus(pid, s) {
@@ -195,6 +239,12 @@ function getDayStatus(day) {
   if (statuses.every(s => s==='completed')) return 'done';
   if (statuses.some(s => s!=='not_started')) return 'partial';
   return 'pending';
+}
+
+function toggleStar(pid) {
+  state.starred[pid] = !state.starred[pid];
+  if (!state.starred[pid]) delete state.starred[pid];
+  save(); renderAll();
 }
 
 /* ===== Render ===== */
@@ -237,6 +287,7 @@ function renderTabContent() {
   if (state.currentTab==='plan') renderPlan();
   else if (state.currentTab==='wrong') renderWrongNotebook();
   else if (state.currentTab==='journal') renderJournal();
+  else if (state.currentTab==='star') renderStarred();
 }
 
 /* ===== Plan Tab ===== */
@@ -249,14 +300,11 @@ function renderPlan() {
     <p class="day-goal">目标：${d.goal}</p>
   </div>`;
 
-  // Built-in problems
   d.problems.forEach(p => { html += renderProblemCard(p, dayNum, false); });
 
-  // Custom problems
   const customs = state.customProblems[dayNum] || [];
   customs.forEach(p => { html += renderProblemCard(p, dayNum, true); });
 
-  // Add problem form
   html += `<div class="add-problem-section">
     <h4>➕ 添加额外题目</h4>
     <div class="add-problem-row">
@@ -266,7 +314,6 @@ function renderPlan() {
     </div>
   </div>`;
 
-  // Reflections
   if (d.reflections.length) {
     html += `<div class="reflections"><h3>🤔 做完后思考</h3>`;
     d.reflections.forEach(r => {
@@ -283,6 +330,7 @@ function renderProblemCard(p, dayNum, isCustom) {
   const s = getStatus(p.id);
   const note = state.notes[p.id] || '';
   const wn = state.wrongNotes[p.id] || {};
+  const isStarred = !!state.starred[p.id];
   const badges = [];
   if (p.mustReview) badges.push('<span class="badge badge-review">⭐ 需二刷</span>');
   if (p.optional) badges.push('<span class="badge badge-optional">选做</span>');
@@ -309,12 +357,18 @@ function renderProblemCard(p, dayNum, isCustom) {
     </div>
     ${p.desc ? `<div class="problem-desc">${escHtml(p.desc)}</div>` : ''}
     <div class="problem-actions">
+      <button class="star-toggle${isStarred?' starred':''}" data-star="${p.id}">${isStarred?'⭐ 重点':'☆ 标记重点'}</button>
       <button class="expand-toggle${note?' open':''}" data-target="note-${p.id}">📝 笔记</button>
       <button class="expand-toggle${(wn.error||wn.correct)?' open':''}" data-target="wrong-${p.id}">📕 错题记录</button>
     </div>
     <div class="expandable${note?' open':''}" id="note-${p.id}">
       <div class="note-area">
-        <textarea placeholder="记录你的思路、解法、收获..." data-note="${p.id}">${escHtml(note)}</textarea>
+        <div class="note-toolbar">
+          <button class="note-tool-btn" data-note-preview="${p.id}">👁 预览</button>
+          <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" data-note-img="${p.id}"></label>
+        </div>
+        <textarea placeholder="支持 Markdown 语法，可直接粘贴图片..." data-note="${p.id}">${escHtml(note)}</textarea>
+        <div class="note-preview" id="note-preview-${p.id}" style="display:none"></div>
       </div>
     </div>
     <div class="expandable${(wn.error||wn.correct)?' open':''}" id="wrong-${p.id}">
@@ -377,6 +431,53 @@ function wrongDetail(label, content) {
     <div class="wrong-detail-label">${label}</div>
     <div class="wrong-detail-content">${escHtml(content)}</div>
   </div>`;
+}
+
+/* ===== Star / 思维新方法 Tab ===== */
+function renderStarred() {
+  const el = document.getElementById('tab-star');
+  const starred = getAllProblems().filter(p => state.starred[p.id]);
+
+  if (!starred.length) {
+    el.innerHTML = `<div class="star-empty">
+      <div class="big-icon">💡</div>
+      <p>还没有标记重点题目~</p>
+      <p style="font-size:13px;margin-top:4px;">在每日计划中点击 ☆ 标记重点题目，它就会出现在这里</p>
+    </div>`;
+    return;
+  }
+
+  let html = `<div class="day-header" style="border-left-color:var(--warm)">
+    <h2>💡 思维新方法</h2>
+    <p class="day-goal">共 ${starred.length} 道重点题目，记录它们带给你的新思路</p>
+  </div>`;
+
+  starred.forEach(p => {
+    const sn = state.starNotes[p.id] || '';
+    const note = state.notes[p.id] || '';
+
+    html += `<div class="star-entry">
+      <div class="star-entry-header">
+        <span class="star-entry-id"><a href="https://www.luogu.com.cn/problem/${p.id}" target="_blank">${p.id} ${escHtml(p.name||'')}</a></span>
+        <span class="star-entry-day">Day ${p.day}</span>
+      </div>
+      <div class="star-note-section">
+        <h4>💡 新方法 / 新思路</h4>
+        <div class="note-toolbar">
+          <button class="note-tool-btn" data-star-preview="${p.id}">👁 预览</button>
+          <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" data-star-img="${p.id}"></label>
+        </div>
+        <textarea class="star-note-textarea" placeholder="记录这道题带给你的新思维、新方法..." data-star-note="${p.id}">${escHtml(sn)}</textarea>
+        <div class="note-preview" id="star-preview-${p.id}" style="display:none"></div>
+      </div>
+      ${note ? `<div class="star-regular-note">
+        <h4>📝 题目笔记</h4>
+        <div class="note-preview">${renderMarkdown(note)}</div>
+      </div>` : ''}
+    </div>`;
+  });
+
+  el.innerHTML = html;
 }
 
 /* ===== Journal Tab ===== */
@@ -508,28 +609,22 @@ function addCustomProblem(dayNum, pid, pname) {
   pid = pid.trim().toUpperCase();
   if (!pid) return;
   if (!state.customProblems[dayNum]) state.customProblems[dayNum] = [];
-  // Prevent duplicate
   const allIds = [...PLAN[dayNum-1].problems.map(p=>p.id), ...state.customProblems[dayNum].map(p=>p.id)];
   if (allIds.includes(pid)) { alert('该题目已存在于当天列表中'); return; }
-  state.customProblems[dayNum].push({
-    id: pid,
-    name: pname.trim() || '',
-    desc: ''
-  });
-  save();
-  renderAll();
+  state.customProblems[dayNum].push({ id: pid, name: pname.trim() || '', desc: '' });
+  save(); renderAll();
 }
 
 function deleteCustomProblem(dayNum, pid) {
   if (!state.customProblems[dayNum]) return;
   state.customProblems[dayNum] = state.customProblems[dayNum].filter(p => p.id !== pid);
   if (!state.customProblems[dayNum].length) delete state.customProblems[dayNum];
-  // Clean up related data
   delete state.progress[pid];
   delete state.notes[pid];
   delete state.wrongNotes[pid];
-  save();
-  renderAll();
+  delete state.starred[pid];
+  delete state.starNotes[pid];
+  save(); renderAll();
 }
 
 /* ===== Data Export/Import ===== */
@@ -549,6 +644,8 @@ function importData(file) {
       const d = JSON.parse(e.target.result);
       state = {...state, ...d, settings:{...state.settings,...(d.settings||{})}};
       if (!state.customProblems) state.customProblems = {};
+      if (!state.starred) state.starred = {};
+      if (!state.starNotes) state.starNotes = {};
       save();
       applyBackground();
       renderMusic();
@@ -569,11 +666,27 @@ function now() {
   return new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
 
-/* ===== Auto-save textareas with debounce ===== */
 let saveTimer = null;
 function debounceSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, 500);
+}
+
+/* ===== Note preview toggle helper ===== */
+function toggleNotePreview(previewBtn, taSelector, previewId) {
+  const ta = document.querySelector(taSelector);
+  const preview = document.getElementById(previewId);
+  if (!ta || !preview) return;
+  if (preview.style.display === 'none') {
+    preview.innerHTML = renderMarkdown(ta.value);
+    preview.style.display = 'block';
+    ta.style.display = 'none';
+    previewBtn.textContent = '✏️ 编辑';
+  } else {
+    preview.style.display = 'none';
+    ta.style.display = '';
+    previewBtn.textContent = '👁 预览';
+  }
 }
 
 /* ===== Event Setup ===== */
@@ -598,10 +711,20 @@ function setupEvents() {
     renderTabContent();
   });
 
-  // Plan tab: status buttons, expand toggles, add/delete custom problems
+  // ---- Plan tab: clicks ----
   document.getElementById('tab-plan').addEventListener('click', e => {
     const statusBtnEl = e.target.closest('.status-btn');
     if (statusBtnEl) { setStatus(statusBtnEl.dataset.pid, statusBtnEl.dataset.status); return; }
+
+    const starBtn = e.target.closest('.star-toggle');
+    if (starBtn) { toggleStar(starBtn.dataset.star); return; }
+
+    const notePreviewBtn = e.target.closest('[data-note-preview]');
+    if (notePreviewBtn) {
+      const pid = notePreviewBtn.dataset.notePreview;
+      toggleNotePreview(notePreviewBtn, `textarea[data-note="${pid}"]`, 'note-preview-'+pid);
+      return;
+    }
 
     const toggle = e.target.closest('.expand-toggle');
     if (toggle) {
@@ -611,7 +734,6 @@ function setupEvents() {
       return;
     }
 
-    // Add custom problem
     if (e.target.id === 'add-problem-btn' || e.target.closest('#add-problem-btn')) {
       const pid = document.getElementById('add-pid').value;
       const pname = document.getElementById('add-pname').value;
@@ -619,7 +741,6 @@ function setupEvents() {
       return;
     }
 
-    // Delete custom problem
     const delBtn = e.target.closest('.custom-problem-delete');
     if (delBtn) {
       const pid = delBtn.dataset.delPid;
@@ -630,7 +751,7 @@ function setupEvents() {
     }
   });
 
-  // Note & wrong-note textareas (delegated)
+  // ---- Plan tab: text input (notes / wrong notes) ----
   document.getElementById('tab-plan').addEventListener('input', e => {
     const ta = e.target;
     if (ta.dataset.note) {
@@ -654,7 +775,7 @@ function setupEvents() {
     }
   });
 
-  // Allow Enter in add-problem input
+  // ---- Plan tab: Enter in add-problem input ----
   document.getElementById('tab-plan').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.target.id === 'add-pid' || e.target.id === 'add-pname')) {
       e.preventDefault();
@@ -664,7 +785,96 @@ function setupEvents() {
     }
   });
 
-  // Journal: add & delete
+  // ---- Plan tab: image upload via file picker ----
+  document.getElementById('tab-plan').addEventListener('change', e => {
+    const imgInput = e.target.closest('[data-note-img]');
+    if (imgInput && imgInput.files[0]) {
+      const pid = imgInput.dataset.noteImg;
+      compressImage(imgInput.files[0]).then(dataUrl => {
+        const ta = document.querySelector(`textarea[data-note="${pid}"]`);
+        if (ta) {
+          insertImageAtCursor(ta, dataUrl);
+          state.notes[pid] = ta.value;
+          debounceSave();
+        }
+        imgInput.value = '';
+      });
+    }
+  });
+
+  // ---- Plan tab: image paste in note textareas ----
+  document.getElementById('tab-plan').addEventListener('paste', async e => {
+    const ta = e.target;
+    if (!ta.matches || !ta.matches('textarea[data-note]')) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        const dataUrl = await compressImage(file);
+        insertImageAtCursor(ta, dataUrl);
+        state.notes[ta.dataset.note] = ta.value;
+        debounceSave();
+        break;
+      }
+    }
+  });
+
+  // ---- Star tab: text input ----
+  document.getElementById('tab-star').addEventListener('input', e => {
+    if (e.target.dataset.starNote) {
+      state.starNotes[e.target.dataset.starNote] = e.target.value;
+      debounceSave();
+    }
+  });
+
+  // ---- Star tab: clicks (preview toggle) ----
+  document.getElementById('tab-star').addEventListener('click', e => {
+    const previewBtn = e.target.closest('[data-star-preview]');
+    if (previewBtn) {
+      const pid = previewBtn.dataset.starPreview;
+      toggleNotePreview(previewBtn, `textarea[data-star-note="${pid}"]`, 'star-preview-'+pid);
+    }
+  });
+
+  // ---- Star tab: image upload ----
+  document.getElementById('tab-star').addEventListener('change', e => {
+    const imgInput = e.target.closest('[data-star-img]');
+    if (imgInput && imgInput.files[0]) {
+      const pid = imgInput.dataset.starImg;
+      compressImage(imgInput.files[0]).then(dataUrl => {
+        const ta = document.querySelector(`textarea[data-star-note="${pid}"]`);
+        if (ta) {
+          insertImageAtCursor(ta, dataUrl);
+          state.starNotes[pid] = ta.value;
+          debounceSave();
+        }
+        imgInput.value = '';
+      });
+    }
+  });
+
+  // ---- Star tab: image paste ----
+  document.getElementById('tab-star').addEventListener('paste', async e => {
+    const ta = e.target;
+    if (!ta.matches || !ta.matches('textarea[data-star-note]')) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        const dataUrl = await compressImage(file);
+        insertImageAtCursor(ta, dataUrl);
+        state.starNotes[ta.dataset.starNote] = ta.value;
+        debounceSave();
+        break;
+      }
+    }
+  });
+
+  // ---- Journal: add & delete ----
   document.getElementById('tab-journal').addEventListener('click', e => {
     const addBtn = e.target.closest('[data-journal-add]');
     if (addBtn) {
@@ -690,7 +900,7 @@ function setupEvents() {
     }
   });
 
-  // Settings
+  // ---- Settings ----
   document.getElementById('settings-btn').addEventListener('click', openSettings);
   document.querySelectorAll('.modal-close').forEach(btn => {
     btn.addEventListener('click', () => closeSettings());
