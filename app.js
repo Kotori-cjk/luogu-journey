@@ -490,7 +490,11 @@ function renderStarred() {
 function renderThinkSpace() {
   const el = document.getElementById('tab-think');
   const entries = state.thinkNotes || [];
-  let nextTid = Date.now();
+
+  // Ensure each entry has a stable id (migrate old entries)
+  let needSave = false;
+  entries.forEach(e => { if (!e.id) { e.id = 'th_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); needSave = true; } });
+  if (needSave) save();
 
   let html = `<div class="think-input-area">
     <h4>🧠 记录通用思考 / 易错点</h4>
@@ -506,6 +510,22 @@ function renderThinkSpace() {
     </div>
   </div>`;
 
+  // Catalog
+  if (entries.length) {
+    html += `<div class="catalog-card">
+      <div class="catalog-header" id="think-catalog-toggle">
+        <h4>📑 思考目录 (${entries.length})</h4>
+        <span class="catalog-caret">▼</span>
+      </div>
+      <div class="catalog-body" id="think-catalog-body">
+        <input type="text" class="catalog-search" id="think-catalog-search" placeholder="搜索标题...">`;
+    entries.slice().reverse().forEach(e => {
+      const t = e.title || e.content?.substring(0,20) || '无标题';
+      html += `<a class="catalog-entry" data-think-scroll="${e.id}">→ ${escHtml(t)}</a>`;
+    });
+    html += `</div></div>`;
+  }
+
   if (!entries.length) {
     html += `<div class="wrong-notebook-empty"><div class="big-icon">🧠</div><p>还没有记录~</p>
       <p style="font-size:13px;margin-top:4px;">记录跨题目的通用思考和易错点</p></div>`;
@@ -513,7 +533,7 @@ function renderThinkSpace() {
 
   entries.slice().reverse().forEach((e, ri) => {
     const idx = entries.length - 1 - ri;
-    html += `<div class="think-entry">
+    html += `<div class="think-entry" id="think-anchor-${e.id}">
       ${e.title ? `<div class="think-entry-title">${escHtml(e.title)}</div>` : ''}
       <div class="think-entry-time">${e.time || ''}</div>
       <div class="think-entry-body">${renderMarkdown(e.content)}</div>
@@ -1032,6 +1052,27 @@ function setupEvents() {
 
   // ---- Think space tab ----
   document.getElementById('tab-think').addEventListener('click', e => {
+    // Catalog scroll
+    const scrollEntry = e.target.closest('[data-think-scroll]');
+    if (scrollEntry) {
+      const target = document.getElementById('think-anchor-' + scrollEntry.dataset.thinkScroll);
+      if (target) {
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+        target.classList.remove('note-highlight');
+        void target.offsetWidth;
+        target.classList.add('note-highlight');
+        setTimeout(() => target.classList.remove('note-highlight'), 1700);
+      }
+      return;
+    }
+    // Catalog toggle
+    if (e.target.closest('#think-catalog-toggle')) {
+      const body = document.getElementById('think-catalog-body');
+      const caret = document.querySelector('#think-catalog-toggle .catalog-caret');
+      const collapsed = body.classList.toggle('collapsed');
+      if (caret) caret.textContent = collapsed ? '▶' : '▼';
+      return;
+    }
     if (e.target.id === 'think-submit-btn') {
       const titleInput = document.getElementById('think-title-input');
       const ta = document.getElementById('think-textarea');
@@ -1039,7 +1080,7 @@ function setupEvents() {
       const content = ta ? ta.value.trim() : '';
       if (!title && !content) return;
       if (!state.thinkNotes) state.thinkNotes = [];
-      state.thinkNotes.push({ title, content, time: now() });
+      state.thinkNotes.push({ id: 'th_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), title, content, time: now() });
       save(); renderThinkSpace();
       return;
     }
@@ -1067,6 +1108,15 @@ function setupEvents() {
         const ta = document.getElementById('think-textarea');
         if (ta) insertImageAtCursor(ta, dataUrl);
         e.target.value = '';
+      });
+    }
+  });
+  // Catalog search filter
+  document.getElementById('tab-think').addEventListener('input', e => {
+    if (e.target.id === 'think-catalog-search') {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('#think-catalog-body .catalog-entry').forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
       });
     }
   });
