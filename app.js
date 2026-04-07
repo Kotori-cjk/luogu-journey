@@ -127,6 +127,7 @@ let state = {
   customProblems: {},
   starred: {},
   starNotes: {},
+  thinkNotes: [],
   settings: {
     obsidianVault: 'Obsidian Vault',
     obsidianFolder: '',
@@ -149,6 +150,7 @@ function load() {
       if (!state.customProblems) state.customProblems = {};
       if (!state.starred) state.starred = {};
       if (!state.starNotes) state.starNotes = {};
+      if (!state.thinkNotes) state.thinkNotes = [];
     }
   } catch(e) { console.warn('Load failed', e); }
 }
@@ -288,6 +290,7 @@ function renderTabContent() {
   else if (state.currentTab==='wrong') renderWrongNotebook();
   else if (state.currentTab==='journal') renderJournal();
   else if (state.currentTab==='star') renderStarred();
+  else if (state.currentTab==='think') renderThinkSpace();
 }
 
 /* ===== Plan Tab ===== */
@@ -358,17 +361,20 @@ function renderProblemCard(p, dayNum, isCustom) {
     ${p.desc ? `<div class="problem-desc">${escHtml(p.desc)}</div>` : ''}
     <div class="problem-actions">
       <button class="star-toggle${isStarred?' starred':''}" data-star="${p.id}">${isStarred?'⭐ 重点':'☆ 标记重点'}</button>
-      <button class="expand-toggle${note?' open':''}" data-target="note-${p.id}">📝 笔记</button>
+      <button class="expand-toggle${note?' open':''}" data-target="note-${p.id}">📝 笔记${note?' (有内容)':''}</button>
       <button class="expand-toggle${(wn.error||wn.correct)?' open':''}" data-target="wrong-${p.id}">📕 错题记录</button>
     </div>
-    <div class="expandable${note?' open':''}" id="note-${p.id}">
+    <div class="expandable" id="note-${p.id}">
       <div class="note-area">
-        <div class="note-toolbar">
-          <button class="note-tool-btn" data-note-preview="${p.id}">👁 预览</button>
-          <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" data-note-img="${p.id}"></label>
+        ${note ? `<div class="note-collapsed-preview" data-note-expand="${p.id}">${renderMarkdown(note)}</div>` : ''}
+        <div class="note-edit-area" id="note-edit-${p.id}" style="${note?'display:none':''}">
+          <div class="note-toolbar">
+            <button class="note-tool-btn" data-note-preview="${p.id}">👁 预览</button>
+            <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" data-note-img="${p.id}"></label>
+          </div>
+          <textarea placeholder="支持 Markdown 语法，可直接粘贴图片..." data-note="${p.id}">${escHtml(note)}</textarea>
+          <div class="note-preview" id="note-preview-${p.id}" style="display:none"></div>
         </div>
-        <textarea placeholder="支持 Markdown 语法，可直接粘贴图片..." data-note="${p.id}">${escHtml(note)}</textarea>
-        <div class="note-preview" id="note-preview-${p.id}" style="display:none"></div>
       </div>
     </div>
     <div class="expandable${(wn.error||wn.correct)?' open':''}" id="wrong-${p.id}">
@@ -474,6 +480,44 @@ function renderStarred() {
         <h4>📝 题目笔记</h4>
         <div class="note-preview">${renderMarkdown(note)}</div>
       </div>` : ''}
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+/* ===== Think Space Tab ===== */
+function renderThinkSpace() {
+  const el = document.getElementById('tab-think');
+  const entries = state.thinkNotes || [];
+  let nextTid = Date.now();
+
+  let html = `<div class="think-input-area">
+    <h4>🧠 记录通用思考 / 易错点</h4>
+    <input type="text" id="think-title-input" class="think-title-input" placeholder="标题（如：二分边界易错、DP 状态设计通则）...">
+    <div class="note-toolbar">
+      <button class="note-tool-btn" id="think-preview-btn">👁 预览</button>
+      <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" id="think-img-input"></label>
+    </div>
+    <textarea id="think-textarea" class="star-note-textarea" placeholder="支持 Markdown，记录具有一般性的思考、易错之处..."></textarea>
+    <div class="note-preview" id="think-preview" style="display:none"></div>
+    <div style="margin-top:8px">
+      <button class="btn btn-primary btn-sm" id="think-submit-btn">发布</button>
+    </div>
+  </div>`;
+
+  if (!entries.length) {
+    html += `<div class="wrong-notebook-empty"><div class="big-icon">🧠</div><p>还没有记录~</p>
+      <p style="font-size:13px;margin-top:4px;">记录跨题目的通用思考和易错点</p></div>`;
+  }
+
+  entries.slice().reverse().forEach((e, ri) => {
+    const idx = entries.length - 1 - ri;
+    html += `<div class="think-entry">
+      ${e.title ? `<div class="think-entry-title">${escHtml(e.title)}</div>` : ''}
+      <div class="think-entry-time">${e.time || ''}</div>
+      <div class="think-entry-body">${renderMarkdown(e.content)}</div>
+      <button class="think-entry-delete" data-think-del="${idx}">✕</button>
     </div>`;
   });
 
@@ -646,6 +690,7 @@ function importData(file) {
       if (!state.customProblems) state.customProblems = {};
       if (!state.starred) state.starred = {};
       if (!state.starNotes) state.starNotes = {};
+      if (!state.thinkNotes) state.thinkNotes = [];
       save();
       applyBackground();
       renderMusic();
@@ -723,6 +768,20 @@ function setupEvents() {
     if (notePreviewBtn) {
       const pid = notePreviewBtn.dataset.notePreview;
       toggleNotePreview(notePreviewBtn, `textarea[data-note="${pid}"]`, 'note-preview-'+pid);
+      return;
+    }
+
+    // Click collapsed note preview to expand into editor
+    const collapsed = e.target.closest('[data-note-expand]');
+    if (collapsed) {
+      const pid = collapsed.dataset.noteExpand;
+      const editArea = document.getElementById('note-edit-' + pid);
+      if (editArea) {
+        collapsed.style.display = 'none';
+        editArea.style.display = '';
+        const ta = editArea.querySelector('textarea');
+        if (ta) ta.focus();
+      }
       return;
     }
 
@@ -971,9 +1030,75 @@ function setupEvents() {
     e.target.value = '';
   });
 
-  // Keyboard: Esc to close modal
+  // ---- Think space tab ----
+  document.getElementById('tab-think').addEventListener('click', e => {
+    if (e.target.id === 'think-submit-btn') {
+      const titleInput = document.getElementById('think-title-input');
+      const ta = document.getElementById('think-textarea');
+      const title = titleInput ? titleInput.value.trim() : '';
+      const content = ta ? ta.value.trim() : '';
+      if (!title && !content) return;
+      if (!state.thinkNotes) state.thinkNotes = [];
+      state.thinkNotes.push({ title, content, time: now() });
+      save(); renderThinkSpace();
+      return;
+    }
+    if (e.target.id === 'think-preview-btn') {
+      const ta = document.getElementById('think-textarea');
+      const pv = document.getElementById('think-preview');
+      if (pv.style.display === 'none') {
+        pv.innerHTML = renderMarkdown(ta.value); pv.style.display = 'block'; ta.style.display = 'none';
+        e.target.textContent = '✏️ 编辑';
+      } else {
+        pv.style.display = 'none'; ta.style.display = ''; e.target.textContent = '👁 预览';
+      }
+      return;
+    }
+    const del = e.target.closest('[data-think-del]');
+    if (del) {
+      const idx = +del.dataset.thinkDel;
+      state.thinkNotes.splice(idx, 1);
+      save(); renderThinkSpace();
+    }
+  });
+  document.getElementById('tab-think').addEventListener('change', e => {
+    if (e.target.id === 'think-img-input' && e.target.files[0]) {
+      compressImage(e.target.files[0]).then(dataUrl => {
+        const ta = document.getElementById('think-textarea');
+        if (ta) insertImageAtCursor(ta, dataUrl);
+        e.target.value = '';
+      });
+    }
+  });
+  document.getElementById('tab-think').addEventListener('paste', async e => {
+    if (!e.target.matches || !e.target.matches('#think-textarea')) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const dataUrl = await compressImage(items[i].getAsFile());
+        insertImageAtCursor(e.target, dataUrl);
+        break;
+      }
+    }
+  });
+
+  // ---- Background viewing mode ----
+  document.getElementById('bg-view-btn').addEventListener('click', () => {
+    if (state.settings.currentBg < 0) { alert('请先在设置中上传背景图片'); return; }
+    document.body.classList.add('bg-viewing');
+  });
+  document.getElementById('bg-view-exit').addEventListener('click', () => {
+    document.body.classList.remove('bg-viewing');
+  });
+
+  // Keyboard: Esc to close modal or exit bg view
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSettings();
+    if (e.key === 'Escape') {
+      if (document.body.classList.contains('bg-viewing')) { document.body.classList.remove('bg-viewing'); }
+      else { closeSettings(); }
+    }
   });
 }
 
