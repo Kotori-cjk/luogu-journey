@@ -933,6 +933,11 @@ body.bg-viewing .bg-view-exit { display: flex; }
     align-items: center; gap: 8px; }
 .bg-view-exit:hover { background: rgba(0,0,0,.75); transform: translateX(-50%) translateY(-2px); }
 
+/* ===== NOTE NAV ===== */
+.note-nav { display: flex; flex-direction: column; gap: 4px; }
+.note-link { display: block; padding: 7px 12px; border-radius: var(--radius-xs); background: #fff; border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; transition: all 0.2s; }
+.note-link:hover { background: var(--bg); border-color: var(--primary-light); color: var(--primary); transform: translateX(2px); }
+
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
