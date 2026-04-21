@@ -241,8 +241,8 @@ body {
 /* ===== MAIN CONTENT ===== */
 #main-content {
     flex: 1;
-    padding: 24px 28px;
-    max-width: 900px;
+    padding: 24px 32px;
+    max-width: 1150px;
 }
 
 /* Tabs */
@@ -519,8 +519,13 @@ body {
 }
 .journal-entry-content {
     font-size: 14px; line-height: 1.6;
-    white-space: pre-wrap;
 }
+.journal-entry-content img { max-width: 100%; border-radius: var(--radius-xs); margin: 6px 0; }
+.journal-entry-content p { margin: 4px 0; white-space: pre-wrap; }
+.journal-entry-content code { background: #f0f0f5; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.journal-entry-content pre { background: #f0f0f5; padding: 10px; border-radius: var(--radius-xs); overflow-x: auto; }
+.journal-entry-content pre code { background: none; padding: 0; }
+.journal-input-wrap { display: flex; flex-direction: column; gap: 6px; }
 .journal-entry-delete {
     position: absolute; top: 8px; right: 8px;
     background: none; border: none;

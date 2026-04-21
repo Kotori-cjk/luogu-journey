@@ -560,16 +560,21 @@ function renderJournal() {
       entries.forEach((e, idx) => {
         html += `<div class="journal-entry">
           <div class="journal-entry-date">${e.date}</div>
-          <div class="journal-entry-content">${escHtml(e.content)}</div>
+          <div class="journal-entry-content">${renderMarkdown(e.content)}</div>
           <button class="journal-entry-delete" data-day="${i}" data-idx="${idx}" title="删除">✕</button>
         </div>`;
       });
     }
 
     html += `</div>
-      <div class="journal-input-row">
-        <textarea placeholder="记录今天的感想、心情、收获..." id="journal-input-${i}"></textarea>
-        <button class="btn btn-primary btn-sm" data-journal-add="${i}">发送</button>
+      <div class="journal-input-wrap">
+        <div class="note-toolbar">
+          <label class="note-tool-btn">📷 贴图<input type="file" accept="image/*" data-journal-img="${i}"></label>
+        </div>
+        <div class="journal-input-row">
+          <textarea placeholder="记录今天的感想、心情、收获…支持 Markdown 和粘贴图片" data-journal-ta="${i}" id="journal-input-${i}"></textarea>
+          <button class="btn btn-primary btn-sm" data-journal-add="${i}">发送</button>
+        </div>
       </div>
     </div>`;
   }
@@ -975,6 +980,35 @@ function setupEvents() {
         state.journals[day].splice(idx, 1);
         save();
         renderJournal();
+      }
+    }
+  });
+
+  // Journal: image upload
+  document.getElementById('tab-journal').addEventListener('change', e => {
+    const imgInput = e.target.closest('[data-journal-img]');
+    if (imgInput && imgInput.files[0]) {
+      const day = imgInput.dataset.journalImg;
+      compressImage(imgInput.files[0]).then(dataUrl => {
+        const ta = document.getElementById('journal-input-'+day);
+        if (ta) insertImageAtCursor(ta, dataUrl);
+        imgInput.value = '';
+      });
+    }
+  });
+
+  // Journal: image paste
+  document.getElementById('tab-journal').addEventListener('paste', async e => {
+    const ta = e.target;
+    if (!ta.matches || !ta.matches('textarea[data-journal-ta]')) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const dataUrl = await compressImage(items[i].getAsFile());
+        insertImageAtCursor(ta, dataUrl);
+        break;
       }
     }
   });
