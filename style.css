@@ -469,6 +469,25 @@ body {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 10px;
 }
+.card-header-actions, .think-entry-head, .journal-entry-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+}
+.card-fold-btn {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border: 1px dashed var(--border);
+    border-radius: 16px;
+    background: #fff;
+    color: var(--text-light);
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s;
+}
+.card-fold-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg); }
+.collapsible-card.collapsed .collapsible-card-body { display: none; }
+.collapsible-card.collapsed { padding-bottom: 14px; }
 .wrong-entry-id {
     font-family: var(--font-cute);
     font-size: 18px; color: var(--danger);
@@ -517,6 +536,7 @@ body {
     font-size: 11px; color: var(--text-light);
     margin-bottom: 4px;
 }
+.journal-entry-head { padding-right: 24px; margin-bottom: 4px; }
 .journal-entry-content {
     font-size: 14px; line-height: 1.6;
 }
@@ -900,6 +920,7 @@ body {
 }
 .think-entry-title { font-family: var(--font-cute); font-size: 16px; color: var(--secondary); margin-bottom: 4px; }
 .think-entry-time { font-size: 11px; color: var(--text-light); margin-bottom: 8px; }
+.think-entry-head { padding-right: 28px; margin-bottom: 8px; }
 .think-entry-body { font-size: 14px; line-height: 1.7; }
 .think-entry-body img { max-width: 100%; border-radius: var(--radius-xs); }
 .think-entry-body code { background: #f0f0f5; padding: 1px 5px; border-radius: 4px; }

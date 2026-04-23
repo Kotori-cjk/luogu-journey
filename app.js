@@ -128,6 +128,7 @@ let state = {
   starred: {},
   starNotes: {},
   thinkNotes: [],
+  collapsedCards: {},
   settings: {
     obsidianVault: 'Obsidian Vault',
     obsidianFolder: '',
@@ -151,6 +152,8 @@ function load() {
       if (!state.starred) state.starred = {};
       if (!state.starNotes) state.starNotes = {};
       if (!state.thinkNotes) state.thinkNotes = [];
+      if (!state.collapsedCards) state.collapsedCards = {};
+      if (!state.collapsedCards) state.collapsedCards = {};
     }
   } catch(e) { console.warn('Load failed', e); }
 }
@@ -247,6 +250,18 @@ function toggleStar(pid) {
   state.starred[pid] = !state.starred[pid];
   if (!state.starred[pid]) delete state.starred[pid];
   save(); renderAll();
+}
+
+function isCardCollapsed(key) {
+  return !!(state.collapsedCards && state.collapsedCards[key]);
+}
+
+function toggleCardCollapsed(key, renderFn) {
+  if (!state.collapsedCards) state.collapsedCards = {};
+  state.collapsedCards[key] = !state.collapsedCards[key];
+  if (!state.collapsedCards[key]) delete state.collapsedCards[key];
+  save();
+  renderFn();
 }
 
 /* ===== Render ===== */
@@ -416,15 +431,22 @@ function renderWrongNotebook() {
 
   wrongs.forEach(p => {
     const wn = state.wrongNotes[p.id] || {};
-    html += `<div class="wrong-entry">
+    const cardKey = `wrong-${p.id}`;
+    const collapsed = isCardCollapsed(cardKey);
+    html += `<div class="wrong-entry collapsible-card${collapsed ? ' collapsed' : ''}">
       <div class="wrong-entry-header">
         <span class="wrong-entry-id"><a href="https://www.luogu.com.cn/problem/${p.id}" target="_blank">${p.id} ${escHtml(p.name||'')}</a></span>
-        <span class="wrong-entry-day">Day ${p.day}${p.isCustom?' (自定义)':''}</span>
+        <div class="card-header-actions">
+          <span class="wrong-entry-day">Day ${p.day}${p.isCustom?' (自定义)':''}</span>
+          <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="wrong">${collapsed ? '展开' : '折叠'}</button>
+        </div>
       </div>
+      <div class="collapsible-card-body">
       ${wrongDetail('错误原因', wn.error)}
       ${wrongDetail('正确思路', wn.correct)}
       ${wrongDetail('关键词', wn.keywords)}
       <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="setStatus('${p.id}','completed')">✅ 已复盘，标记完成</button>
+      </div>
     </div>`;
   });
 
@@ -461,12 +483,18 @@ function renderStarred() {
   starred.forEach(p => {
     const sn = state.starNotes[p.id] || '';
     const note = state.notes[p.id] || '';
+    const cardKey = `star-${p.id}`;
+    const collapsed = isCardCollapsed(cardKey);
 
-    html += `<div class="star-entry">
+    html += `<div class="star-entry collapsible-card${collapsed ? ' collapsed' : ''}">
       <div class="star-entry-header">
         <span class="star-entry-id"><a href="https://www.luogu.com.cn/problem/${p.id}" target="_blank">${p.id} ${escHtml(p.name||'')}</a></span>
-        <span class="star-entry-day">Day ${p.day}</span>
+        <div class="card-header-actions">
+          <span class="star-entry-day">Day ${p.day}</span>
+          <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="star">${collapsed ? '展开' : '折叠'}</button>
+        </div>
       </div>
+      <div class="collapsible-card-body">
       <div class="star-note-section">
         <h4>💡 新方法 / 新思路</h4>
         <div class="note-toolbar">
@@ -480,6 +508,7 @@ function renderStarred() {
         <h4>📝 题目笔记</h4>
         <div class="note-preview">${renderMarkdown(note)}</div>
       </div>` : ''}
+      </div>
     </div>`;
   });
 
@@ -533,10 +562,19 @@ function renderThinkSpace() {
 
   entries.slice().reverse().forEach((e, ri) => {
     const idx = entries.length - 1 - ri;
-    html += `<div class="think-entry" id="think-anchor-${e.id}">
-      ${e.title ? `<div class="think-entry-title">${escHtml(e.title)}</div>` : ''}
-      <div class="think-entry-time">${e.time || ''}</div>
+    const cardKey = `think-${e.id}`;
+    const collapsed = isCardCollapsed(cardKey);
+    html += `<div class="think-entry collapsible-card${collapsed ? ' collapsed' : ''}" id="think-anchor-${e.id}">
+      <div class="think-entry-head">
+        <div>
+          ${e.title ? `<div class="think-entry-title">${escHtml(e.title)}</div>` : ''}
+          <div class="think-entry-time">${e.time || ''}</div>
+        </div>
+        <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="think">${collapsed ? '展开' : '折叠'}</button>
+      </div>
+      <div class="collapsible-card-body">
       <div class="think-entry-body">${renderMarkdown(e.content)}</div>
+      </div>
       <button class="think-entry-delete" data-think-del="${idx}">✕</button>
     </div>`;
   });
@@ -558,9 +596,16 @@ function renderJournal() {
 
     if (entries.length) {
       entries.forEach((e, idx) => {
-        html += `<div class="journal-entry">
-          <div class="journal-entry-date">${e.date}</div>
+        const cardKey = `journal-${i}-${idx}`;
+        const collapsed = isCardCollapsed(cardKey);
+        html += `<div class="journal-entry collapsible-card${collapsed ? ' collapsed' : ''}">
+          <div class="journal-entry-head">
+            <div class="journal-entry-date">${e.date}</div>
+            <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="journal">${collapsed ? '展开' : '折叠'}</button>
+          </div>
+          <div class="collapsible-card-body">
           <div class="journal-entry-content">${renderMarkdown(e.content)}</div>
+          </div>
           <button class="journal-entry-delete" data-day="${i}" data-idx="${idx}" title="删除">✕</button>
         </div>`;
       });
@@ -779,6 +824,18 @@ function setupEvents() {
     document.getElementById('tab-'+tab).classList.add('active');
     state.currentTab = tab;
     renderTabContent();
+  });
+
+  document.getElementById('main-content').addEventListener('click', e => {
+    const foldBtn = e.target.closest('[data-fold-card]');
+    if (!foldBtn) return;
+    const renderMap = {
+      wrong: renderWrongNotebook,
+      star: renderStarred,
+      think: renderThinkSpace,
+      journal: renderJournal
+    };
+    toggleCardCollapsed(foldBtn.dataset.foldCard, renderMap[foldBtn.dataset.foldRender] || renderTabContent);
   });
 
   // ---- Plan tab: clicks ----
