@@ -536,6 +536,7 @@ function renderThinkSpace() {
     <div class="note-preview" id="think-preview" style="display:none"></div>
     <div style="margin-top:8px">
       <button class="btn btn-primary btn-sm" id="think-submit-btn">发布</button>
+      <button class="btn btn-secondary btn-sm hidden" id="think-cancel-edit-btn">取消编辑</button>
     </div>
   </div>`;
 
@@ -568,9 +569,12 @@ function renderThinkSpace() {
       <div class="think-entry-head">
         <div>
           ${e.title ? `<div class="think-entry-title">${escHtml(e.title)}</div>` : ''}
-          <div class="think-entry-time">${e.time || ''}</div>
+          <div class="think-entry-time">${e.time || ''}${e.updatedAt ? ` · 更新于 ${e.updatedAt}` : ''}</div>
         </div>
-        <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="think">${collapsed ? '展开' : '折叠'}</button>
+        <div class="card-header-actions">
+          <button class="card-fold-btn" data-think-edit="${idx}">编辑</button>
+          <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="think">${collapsed ? '展开' : '折叠'}</button>
+        </div>
       </div>
       <div class="collapsible-card-body">
       <div class="think-entry-body">${renderMarkdown(e.content)}</div>
@@ -600,8 +604,11 @@ function renderJournal() {
         const collapsed = isCardCollapsed(cardKey);
         html += `<div class="journal-entry collapsible-card${collapsed ? ' collapsed' : ''}">
           <div class="journal-entry-head">
-            <div class="journal-entry-date">${e.date}</div>
+            <div class="journal-entry-date">${e.date}${e.updatedAt ? ` · 更新于 ${e.updatedAt}` : ''}</div>
+          <div class="card-header-actions">
+            <button class="card-fold-btn" data-journal-edit="${i}:${idx}">编辑</button>
             <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="journal">${collapsed ? '展开' : '折叠'}</button>
+          </div>
           </div>
           <div class="collapsible-card-body">
           <div class="journal-entry-content">${renderMarkdown(e.content)}</div>
@@ -619,6 +626,7 @@ function renderJournal() {
         <div class="journal-input-row">
           <textarea placeholder="记录今天的感想、心情、收获…支持 Markdown 和粘贴图片" data-journal-ta="${i}" id="journal-input-${i}"></textarea>
           <button class="btn btn-primary btn-sm" data-journal-add="${i}">发送</button>
+          <button class="btn btn-secondary btn-sm hidden" data-journal-cancel="${i}">取消编辑</button>
         </div>
       </div>
     </div>`;
@@ -1024,9 +1032,49 @@ function setupEvents() {
       const content = input.value.trim();
       if (!content) return;
       if (!state.journals[day]) state.journals[day] = [];
-      state.journals[day].push({date: now(), content});
+      const editingIdx = input.dataset.editingJournalIdx;
+      if (editingIdx !== undefined) {
+        const entry = state.journals[day][+editingIdx];
+        if (entry) {
+          entry.content = content;
+          entry.updatedAt = now();
+        }
+      } else {
+        state.journals[day].push({date: now(), content});
+      }
       save();
       renderJournal();
+      return;
+    }
+    const editBtn = e.target.closest('[data-journal-edit]');
+    if (editBtn) {
+      const [dayText, idxText] = editBtn.dataset.journalEdit.split(':');
+      const day = +dayText;
+      const idx = +idxText;
+      const entry = state.journals[day]?.[idx];
+      const input = document.getElementById('journal-input-'+day);
+      const addButton = document.querySelector(`[data-journal-add="${day}"]`);
+      const cancelButton = document.querySelector(`[data-journal-cancel="${day}"]`);
+      if (!entry || !input) return;
+      input.value = entry.content || '';
+      input.dataset.editingJournalIdx = String(idx);
+      if (addButton) addButton.textContent = '更新';
+      if (cancelButton) cancelButton.classList.remove('hidden');
+      input.scrollIntoView({behavior:'smooth', block:'center'});
+      input.focus();
+      return;
+    }
+    const cancelBtn = e.target.closest('[data-journal-cancel]');
+    if (cancelBtn) {
+      const day = +cancelBtn.dataset.journalCancel;
+      const input = document.getElementById('journal-input-'+day);
+      const addButton = document.querySelector(`[data-journal-add="${day}"]`);
+      if (input) {
+        input.value = '';
+        delete input.dataset.editingJournalIdx;
+      }
+      if (addButton) addButton.textContent = '发送';
+      cancelBtn.classList.add('hidden');
       return;
     }
     const delBtn = e.target.closest('.journal-entry-delete');
@@ -1171,8 +1219,33 @@ function setupEvents() {
       const content = ta ? ta.value.trim() : '';
       if (!title && !content) return;
       if (!state.thinkNotes) state.thinkNotes = [];
-      state.thinkNotes.push({ id: 'th_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), title, content, time: now() });
+      const editingIdx = titleInput?.dataset.editingThinkIdx;
+      if (editingIdx !== undefined) {
+        const entry = state.thinkNotes[+editingIdx];
+        if (entry) {
+          entry.title = title;
+          entry.content = content;
+          entry.updatedAt = now();
+        }
+      } else {
+        state.thinkNotes.push({ id: 'th_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), title, content, time: now() });
+      }
       save(); renderThinkSpace();
+      return;
+    }
+    if (e.target.id === 'think-cancel-edit-btn') {
+      const titleInput = document.getElementById('think-title-input');
+      const ta = document.getElementById('think-textarea');
+      if (titleInput) {
+        titleInput.value = '';
+        delete titleInput.dataset.editingThinkIdx;
+      }
+      if (ta) ta.value = '';
+      const pv = document.getElementById('think-preview');
+      if (pv) { pv.style.display = 'none'; pv.innerHTML = ''; }
+      const submit = document.getElementById('think-submit-btn');
+      if (submit) submit.textContent = '发布';
+      e.target.classList.add('hidden');
       return;
     }
     if (e.target.id === 'think-preview-btn') {
@@ -1191,6 +1264,31 @@ function setupEvents() {
       const idx = +del.dataset.thinkDel;
       state.thinkNotes.splice(idx, 1);
       save(); renderThinkSpace();
+      return;
+    }
+    const edit = e.target.closest('[data-think-edit]');
+    if (edit) {
+      const idx = +edit.dataset.thinkEdit;
+      const entry = state.thinkNotes[idx];
+      if (!entry) return;
+      const titleInput = document.getElementById('think-title-input');
+      const ta = document.getElementById('think-textarea');
+      const submit = document.getElementById('think-submit-btn');
+      const cancel = document.getElementById('think-cancel-edit-btn');
+      const pv = document.getElementById('think-preview');
+      if (titleInput) {
+        titleInput.value = entry.title || '';
+        titleInput.dataset.editingThinkIdx = String(idx);
+      }
+      if (ta) {
+        ta.value = entry.content || '';
+        ta.style.display = '';
+      }
+      if (pv) { pv.style.display = 'none'; pv.innerHTML = ''; }
+      if (submit) submit.textContent = '更新';
+      if (cancel) cancel.classList.remove('hidden');
+      document.querySelector('.think-input-area')?.scrollIntoView({behavior:'smooth', block:'start'});
+      if (titleInput) titleInput.focus();
     }
   });
   document.getElementById('tab-think').addEventListener('change', e => {

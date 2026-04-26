@@ -51,6 +51,8 @@ body {
     overflow-x: hidden;
 }
 
+.hidden { display: none !important; }
+
 #bg-layer {
     position: fixed; inset: 0;
     background-size: cover;
