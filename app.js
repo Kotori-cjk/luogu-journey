@@ -266,9 +266,17 @@ function toggleCardCollapsed(key, renderFn) {
 
 /* ===== Render ===== */
 function renderAll() {
+  syncActiveTab();
   renderProgress();
   renderDayNav();
   renderTabContent();
+}
+
+function syncActiveTab() {
+  const activeTab = document.querySelector(`.tab[data-tab="${state.currentTab}"]`) || document.querySelector('.tab[data-tab="plan"]');
+  const activeContent = document.getElementById('tab-' + (activeTab?.dataset.tab || 'plan'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === activeTab));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t === activeContent));
 }
 
 function renderProgress() {
@@ -306,6 +314,7 @@ function renderTabContent() {
   else if (state.currentTab==='journal') renderJournal();
   else if (state.currentTab==='star') renderStarred();
   else if (state.currentTab==='think') renderThinkSpace();
+  else if (state.currentTab==='bailian') return;
 }
 
 /* ===== Plan Tab ===== */
