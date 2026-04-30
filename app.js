@@ -455,9 +455,14 @@ function statusBtn(pid, val, label, current) {
 /* ===== Wrong Notebook Tab ===== */
 function renderWrongNotebook() {
   const wrongs = getAllProblems().filter(p => getStatus(p.id)==='wrong');
+  const bailianWrongs = BAILIAN_SECTIONS.flatMap(section => (
+    section.problems
+      .filter(p => getBailianStatus(p.id)==='wrong')
+      .map(p => ({...p, sectionTitle: section.title}))
+  ));
   const el = document.getElementById('tab-wrong');
 
-  if (!wrongs.length) {
+  if (!wrongs.length && !bailianWrongs.length) {
     el.innerHTML = `<div class="wrong-notebook-empty">
       <div class="big-icon">📖</div>
       <p>暂无错题记录~</p>
@@ -469,6 +474,11 @@ function renderWrongNotebook() {
   let html = `<div class="day-header" style="border-left-color:var(--danger)">
     <h2>📕 错题本</h2>
     <p class="day-goal">共 ${wrongs.length} 道错题，加油复盘！</p>
+  </div>`;
+
+  html += `<div class="wrong-source-summary">
+    <span>洛谷错题：${wrongs.length}</span>
+    <span>百炼错题：${bailianWrongs.length}</span>
   </div>`;
 
   wrongs.forEach(p => {
@@ -488,6 +498,29 @@ function renderWrongNotebook() {
       ${wrongDetail('正确思路', wn.correct)}
       ${wrongDetail('关键词', wn.keywords)}
       <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="setStatus('${p.id}','completed')">✅ 已复盘，标记完成</button>
+      </div>
+    </div>`;
+  });
+
+  bailianWrongs.forEach(p => {
+    const wn = state.bailianWrongNotes[p.id] || {};
+    const reflection = state.bailianReflections[p.id] || '';
+    const cardKey = `wrong-bailian-${p.id}`;
+    const collapsed = isCardCollapsed(cardKey);
+    html += `<div class="wrong-entry bailian-wrong-entry collapsible-card${collapsed ? ' collapsed' : ''}">
+      <div class="wrong-entry-header">
+        <span class="wrong-entry-id"><a href="${p.url}" target="_blank">百炼 ${p.rawId} ${escHtml(p.name||'')}</a></span>
+        <div class="card-header-actions">
+          <span class="wrong-entry-day">${escHtml(p.sectionTitle)}</span>
+          <button class="card-fold-btn" data-fold-card="${cardKey}" data-fold-render="wrong">${collapsed ? '展开' : '折叠'}</button>
+        </div>
+      </div>
+      <div class="collapsible-card-body">
+      ${wrongDetail('错误原因', wn.error)}
+      ${wrongDetail('正确思路', wn.correct)}
+      ${wrongDetail('关键词', wn.keywords)}
+      ${wrongDetail('反思总结', reflection)}
+      <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="setBailianStatus('${p.id}','completed')">✅ 已复盘，标记完成</button>
       </div>
     </div>`;
   });
@@ -696,10 +729,21 @@ function renderBailian() {
       <span>✅ ${done}/${BAILIAN_TOTAL} 完成</span>
       <span>❌ ${wrong} 错题</span>
       <span>⭐ ${starred} 重点</span>
-    </div>`;
+    </div>
+    <nav class="bailian-catalog" aria-label="百炼专题目录">
+      <div class="bailian-catalog-title">专题目录</div>
+      <div class="bailian-catalog-list">
+        ${BAILIAN_SECTIONS.map((section, index) => `
+          <button class="bailian-catalog-item" data-bailian-section-scroll="${index}" type="button">
+            <span>${index + 1}. ${escHtml(section.title)}</span>
+            <small>${section.problems.length} 题</small>
+          </button>
+        `).join('')}
+      </div>
+    </nav>`;
 
-  BAILIAN_SECTIONS.forEach(section => {
-    html += `<section class="bailian-section">
+  BAILIAN_SECTIONS.forEach((section, index) => {
+    html += `<section class="bailian-section" id="bailian-section-${index}">
       <div class="bailian-section-head">
         <h3>${escHtml(section.title)}</h3>
         <p>${escHtml(section.desc)}</p>
@@ -1104,6 +1148,18 @@ function setupEvents() {
 
   // ---- Bailian tab: clicks ----
   document.getElementById('tab-bailian').addEventListener('click', e => {
+    const sectionLink = e.target.closest('[data-bailian-section-scroll]');
+    if (sectionLink) {
+      const target = document.getElementById('bailian-section-' + sectionLink.dataset.bailianSectionScroll);
+      if (target) {
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+        target.classList.remove('note-highlight');
+        void target.offsetWidth;
+        target.classList.add('note-highlight');
+        setTimeout(() => target.classList.remove('note-highlight'), 1700);
+      }
+      return;
+    }
     const statusBtnEl = e.target.closest('[data-bailian-status]');
     if (statusBtnEl) {
       setBailianStatus(statusBtnEl.dataset.bailianPid, statusBtnEl.dataset.bailianStatus);

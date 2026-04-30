@@ -339,6 +339,51 @@ body {
     font-size: 13px;
 }
 
+.bailian-catalog {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px dashed var(--border);
+}
+
+.bailian-catalog-title {
+    margin-bottom: 8px;
+    font-family: var(--font-cute);
+    color: var(--orange-dark);
+}
+
+.bailian-catalog-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.bailian-catalog-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.bailian-catalog-item:hover {
+    border-color: var(--orange-light);
+    transform: translateY(-1px);
+}
+
+.bailian-catalog-item small {
+    color: var(--text-light);
+    white-space: nowrap;
+}
+
 .bailian-section {
     margin-top: 16px;
     padding: 16px;
@@ -374,6 +419,25 @@ body {
 
 .bailian-problem .problem-top {
     align-items: flex-start;
+}
+
+.bailian-wrong-entry {
+    border-left-color: var(--orange);
+}
+
+.wrong-source-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.wrong-source-summary span {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-light);
+    font-size: 12px;
 }
 
 /* Day Header */
