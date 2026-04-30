@@ -280,6 +280,14 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Bailian training set */
+.bailian-board {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--orange);
+}
+
 .bailian-embed-card {
     background: var(--card);
     border-radius: var(--radius);
@@ -314,6 +322,58 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: #fffdf8;
+}
+
+.bailian-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.bailian-stats span {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.bailian-section {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.72);
+}
+
+.bailian-section-head {
+    margin-bottom: 12px;
+}
+
+.bailian-section-head h3 {
+    font-family: var(--font-cute);
+    color: var(--orange-dark);
+    margin-bottom: 4px;
+}
+
+.bailian-section-head p {
+    color: var(--text-light);
+    font-size: 13px;
+}
+
+.bailian-problem-list {
+    display: grid;
+    gap: 10px;
+}
+
+.bailian-problem {
+    margin-bottom: 0;
+    background: rgba(255,255,255,0.9);
+}
+
+.bailian-problem .problem-top {
+    align-items: flex-start;
 }
 
 /* Day Header */

@@ -113,6 +113,19 @@ const PLAN = [
 ];
 
 const REVIEW_TOTAL = PLAN.flatMap(d => d.problems).filter(p => p.mustReview).length;
+const BAILIAN_SECTIONS = [
+  {title:'结构体排序 / STL / 容器', desc:'目标：前中段快速拿分，10 到 15 分钟写出稳定代码。', problems:[['4016','班级排名'],['4043','GPA排名系统'],['4044','小白鼠再排队'],['4085','数组去重排序'],['3729','用set实现字符串的排序和查找'],['4090','超级备忘录'],['4093','倒排索引查询'],['4078','实现堆结构']]},
+  {title:'二分', desc:'目标：边界不慌，check 清晰，更新方向稳定。', problems:[['1064','网线主管'],['4037','聪明的质监员'],['4134','查找最接近的元素'],['4135','月度开销'],['4142','二分法求函数的零点'],['3372','Telephone Wire']]},
+  {title:'搜索：BFS / DFS / 状态搜索', desc:'目标：稳住判重、层数、边界和多组数据清空。', problems:[['3726','仙岛求药'],['3752','走迷宫'],['4001','抓住那头牛'],['4105','拯救公主'],['4115','鸣人和佐助'],['4116','拯救行动'],['4127','迷宫问题'],['4129','变换的迷宫'],['3859','Lake Counting'],['4123','马走日']]},
+  {title:'递归 / 回溯 / 剪枝', desc:'目标：训练搜索树意识、撤销时机和剪枝质量。', problems:[['4070','全排列'],['4147','汉诺塔问题'],['1190','生日蛋糕'],['1321','棋盘问题'],['1084','正方形破坏者']]},
+  {title:'DP', desc:'目标：状态定义清楚，边界和转移顺序稳定。', problems:[['1088','滑雪'],['1159','Palindrome'],['3262','新数字三角形'],['1185','炮兵阵地'],['1661','帮助 Jimmy'],['4118','开餐馆'],['4131','Charm Bracelet'],['4122','切割回文'],['4121','股票买卖']]},
+  {title:'贪心', desc:'目标：先排序、再扫描、局部决策，建立最常用的贪心直觉。', problems:[['1017','装箱问题'],['1065','Wooden Sticks'],['1083','Moving Tables'],['4034','选择客栈'],['4144','畜栏保留问题'],['4151','电影节'],['4137','最小新整数'],['1328','Radar Installation']]},
+  {title:'单调栈 / 单调结构', desc:'目标：把“下标、弹栈条件、答案结算”练成固定动作。', problems:[['2559','Largest Rectangle in a Histogram'],['4074','积水量'],['2019','Cornfields'],['2766','最大子矩阵']]}
+].map(section => ({
+  ...section,
+  problems: section.problems.map(([id, name]) => ({ id: `B${id}`, rawId: id, name, url: `http://bailian.openjudge.cn/practice/${id}/` }))
+}));
+const BAILIAN_TOTAL = BAILIAN_SECTIONS.reduce((sum, section) => sum + section.problems.length, 0);
 const STORAGE_KEY = 'kotori-luogu-v1';
 const EMOJIS = ['✿','❀','🌸','⭐','💫','🎀','🦋','🌙'];
 
@@ -128,6 +141,10 @@ let state = {
   starred: {},
   starNotes: {},
   thinkNotes: [],
+  bailianProgress: {},
+  bailianWrongNotes: {},
+  bailianReflections: {},
+  bailianStarred: {},
   collapsedCards: {},
   settings: {
     obsidianVault: 'Obsidian Vault',
@@ -152,6 +169,10 @@ function load() {
       if (!state.starred) state.starred = {};
       if (!state.starNotes) state.starNotes = {};
       if (!state.thinkNotes) state.thinkNotes = [];
+      if (!state.bailianProgress) state.bailianProgress = {};
+      if (!state.bailianWrongNotes) state.bailianWrongNotes = {};
+      if (!state.bailianReflections) state.bailianReflections = {};
+      if (!state.bailianStarred) state.bailianStarred = {};
       if (!state.collapsedCards) state.collapsedCards = {};
       if (!state.collapsedCards) state.collapsedCards = {};
     }
@@ -252,6 +273,18 @@ function toggleStar(pid) {
   save(); renderAll();
 }
 
+function getBailianStatus(pid) { return (state.bailianProgress[pid] || {}).status || 'not_started'; }
+function setBailianStatus(pid, s) {
+  if (!state.bailianProgress[pid]) state.bailianProgress[pid] = {};
+  state.bailianProgress[pid].status = s;
+  save(); renderBailian();
+}
+function toggleBailianStar(pid) {
+  state.bailianStarred[pid] = !state.bailianStarred[pid];
+  if (!state.bailianStarred[pid]) delete state.bailianStarred[pid];
+  save(); renderBailian();
+}
+
 function isCardCollapsed(key) {
   return !!(state.collapsedCards && state.collapsedCards[key]);
 }
@@ -314,7 +347,7 @@ function renderTabContent() {
   else if (state.currentTab==='journal') renderJournal();
   else if (state.currentTab==='star') renderStarred();
   else if (state.currentTab==='think') renderThinkSpace();
-  else if (state.currentTab==='bailian') return;
+  else if (state.currentTab==='bailian') renderBailian();
 }
 
 /* ===== Plan Tab ===== */
@@ -644,6 +677,91 @@ function renderJournal() {
   el.innerHTML = html;
 }
 
+/* ===== Bailian Tab ===== */
+function renderBailian() {
+  const el = document.getElementById('tab-bailian');
+  const done = BAILIAN_SECTIONS.flatMap(s => s.problems).filter(p => getBailianStatus(p.id)==='completed').length;
+  const wrong = BAILIAN_SECTIONS.flatMap(s => s.problems).filter(p => getBailianStatus(p.id)==='wrong').length;
+  const starred = Object.keys(state.bailianStarred || {}).length;
+
+  let html = `<div class="bailian-board">
+    <div class="bailian-embed-head">
+      <div>
+        <h2>🔥 百炼成钢</h2>
+        <p>百炼机考训练题单。每题都支持完成状态、重点标记、错题记录和反思总结。</p>
+      </div>
+      <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">打开原题单</a>
+    </div>
+    <div class="bailian-stats">
+      <span>✅ ${done}/${BAILIAN_TOTAL} 完成</span>
+      <span>❌ ${wrong} 错题</span>
+      <span>⭐ ${starred} 重点</span>
+    </div>`;
+
+  BAILIAN_SECTIONS.forEach(section => {
+    html += `<section class="bailian-section">
+      <div class="bailian-section-head">
+        <h3>${escHtml(section.title)}</h3>
+        <p>${escHtml(section.desc)}</p>
+      </div>
+      <div class="bailian-problem-list">
+        ${section.problems.map(renderBailianProblem).join('')}
+      </div>
+    </section>`;
+  });
+
+  el.innerHTML = html + '</div>';
+}
+
+function renderBailianProblem(p) {
+  const s = getBailianStatus(p.id);
+  const wn = state.bailianWrongNotes[p.id] || {};
+  const reflection = state.bailianReflections[p.id] || '';
+  const isStarred = !!state.bailianStarred[p.id];
+  return `<article class="problem-card bailian-problem status-${s}" data-bailian-pid="${p.id}">
+    <div class="problem-top">
+      <div class="problem-info">
+        <span class="problem-id"><a href="${p.url}" target="_blank">${p.rawId}</a></span>
+        <span class="problem-name">${escHtml(p.name)}</span>
+      </div>
+      <div class="status-selector">
+        ${bailianStatusBtn(p.id,'not_started','⬜ 未做',s)}
+        ${bailianStatusBtn(p.id,'wrong','❌ 做错',s)}
+        ${bailianStatusBtn(p.id,'completed','✅ 完成',s)}
+      </div>
+    </div>
+    <div class="problem-actions">
+      <button class="star-toggle${isStarred?' starred':''}" data-bailian-star="${p.id}">${isStarred?'⭐ 重点':'☆ 标记重点'}</button>
+      <button class="expand-toggle${(wn.error||wn.correct||wn.keywords)?' open':''}" data-target="bailian-wrong-${p.id}">📕 错题记录</button>
+      <button class="expand-toggle${reflection?' open':''}" data-target="bailian-reflection-${p.id}">📝 反思总结${reflection?' (有内容)':''}</button>
+    </div>
+    <div class="expandable${(wn.error||wn.correct||wn.keywords)?' open':''}" id="bailian-wrong-${p.id}">
+      <div class="wrong-area">
+        <label>错误原因</label>
+        <textarea placeholder="这题卡在哪里？是读题、边界、模型还是实现？" data-bailian-wrong-error="${p.id}">${escHtml(wn.error||'')}</textarea>
+        <label>正确思路</label>
+        <textarea placeholder="正确做法的关键步骤是什么？" data-bailian-wrong-correct="${p.id}">${escHtml(wn.correct||'')}</textarea>
+        <label>关键词 / 题型标签</label>
+        <textarea placeholder="下次看到什么信号要想到这题？" data-bailian-wrong-keywords="${p.id}" style="min-height:40px">${escHtml(wn.keywords||'')}</textarea>
+      </div>
+    </div>
+    <div class="expandable${reflection?' open':''}" id="bailian-reflection-${p.id}">
+      <div class="note-area">
+        <div class="note-toolbar">
+          <button class="note-tool-btn" data-bailian-preview="${p.id}">👁 预览</button>
+        </div>
+        <textarea placeholder="记录这道百炼题的反思、模板、易错点和下次复习提醒。支持 Markdown。" data-bailian-reflection="${p.id}">${escHtml(reflection)}</textarea>
+        <div class="note-preview" id="bailian-preview-${p.id}" style="display:none"></div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function bailianStatusBtn(pid, val, label, current) {
+  const cls = current===val ? ` active-${val}` : '';
+  return `<button class="status-btn${cls}" data-bailian-pid="${pid}" data-bailian-status="${val}">${label}</button>`;
+}
+
 /* ===== Music ===== */
 function renderMusic() {
   const c = document.getElementById('music-container');
@@ -778,6 +896,10 @@ function importData(file) {
       if (!state.starred) state.starred = {};
       if (!state.starNotes) state.starNotes = {};
       if (!state.thinkNotes) state.thinkNotes = [];
+      if (!state.bailianProgress) state.bailianProgress = {};
+      if (!state.bailianWrongNotes) state.bailianWrongNotes = {};
+      if (!state.bailianReflections) state.bailianReflections = {};
+      if (!state.bailianStarred) state.bailianStarred = {};
       save();
       applyBackground();
       renderMusic();
@@ -850,7 +972,8 @@ function setupEvents() {
       wrong: renderWrongNotebook,
       star: renderStarred,
       think: renderThinkSpace,
-      journal: renderJournal
+      journal: renderJournal,
+      bailian: renderBailian
     };
     toggleCardCollapsed(foldBtn.dataset.foldCard, renderMap[foldBtn.dataset.foldRender] || renderTabContent);
   });
@@ -976,6 +1099,56 @@ function setupEvents() {
         debounceSave();
         break;
       }
+    }
+  });
+
+  // ---- Bailian tab: clicks ----
+  document.getElementById('tab-bailian').addEventListener('click', e => {
+    const statusBtnEl = e.target.closest('[data-bailian-status]');
+    if (statusBtnEl) {
+      setBailianStatus(statusBtnEl.dataset.bailianPid, statusBtnEl.dataset.bailianStatus);
+      return;
+    }
+    const starBtn = e.target.closest('[data-bailian-star]');
+    if (starBtn) {
+      toggleBailianStar(starBtn.dataset.bailianStar);
+      return;
+    }
+    const previewBtn = e.target.closest('[data-bailian-preview]');
+    if (previewBtn) {
+      const pid = previewBtn.dataset.bailianPreview;
+      toggleNotePreview(previewBtn, `textarea[data-bailian-reflection="${pid}"]`, 'bailian-preview-'+pid);
+      return;
+    }
+    const toggle = e.target.closest('.expand-toggle');
+    if (toggle) {
+      toggle.classList.toggle('open');
+      const target = document.getElementById(toggle.dataset.target);
+      if (target) target.classList.toggle('open');
+    }
+  });
+
+  // ---- Bailian tab: text input ----
+  document.getElementById('tab-bailian').addEventListener('input', e => {
+    const ta = e.target;
+    if (ta.dataset.bailianReflection) {
+      state.bailianReflections[ta.dataset.bailianReflection] = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.bailianWrongError) {
+      if (!state.bailianWrongNotes[ta.dataset.bailianWrongError]) state.bailianWrongNotes[ta.dataset.bailianWrongError] = {};
+      state.bailianWrongNotes[ta.dataset.bailianWrongError].error = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.bailianWrongCorrect) {
+      if (!state.bailianWrongNotes[ta.dataset.bailianWrongCorrect]) state.bailianWrongNotes[ta.dataset.bailianWrongCorrect] = {};
+      state.bailianWrongNotes[ta.dataset.bailianWrongCorrect].correct = ta.value;
+      debounceSave();
+    }
+    if (ta.dataset.bailianWrongKeywords) {
+      if (!state.bailianWrongNotes[ta.dataset.bailianWrongKeywords]) state.bailianWrongNotes[ta.dataset.bailianWrongKeywords] = {};
+      state.bailianWrongNotes[ta.dataset.bailianWrongKeywords].keywords = ta.value;
+      debounceSave();
     }
   });
 
