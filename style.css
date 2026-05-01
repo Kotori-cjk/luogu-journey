@@ -316,6 +316,13 @@ body {
     line-height: 1.7;
 }
 
+.bailian-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .bailian-iframe {
     width: 100%;
     min-height: 760px;

@@ -120,10 +120,18 @@ const BAILIAN_SECTIONS = [
   {title:'递归 / 回溯 / 剪枝', desc:'目标：训练搜索树意识、撤销时机和剪枝质量。', problems:[['4070','全排列'],['4147','汉诺塔问题'],['1190','生日蛋糕'],['1321','棋盘问题'],['1084','正方形破坏者']]},
   {title:'DP', desc:'目标：状态定义清楚，边界和转移顺序稳定。', problems:[['1088','滑雪'],['1159','Palindrome'],['3262','新数字三角形'],['1185','炮兵阵地'],['1661','帮助 Jimmy'],['4118','开餐馆'],['4131','Charm Bracelet'],['4122','切割回文'],['4121','股票买卖']]},
   {title:'贪心', desc:'目标：先排序、再扫描、局部决策，建立最常用的贪心直觉。', problems:[['1017','装箱问题'],['1065','Wooden Sticks'],['1083','Moving Tables'],['4034','选择客栈'],['4144','畜栏保留问题'],['4151','电影节'],['4137','最小新整数'],['1328','Radar Installation']]},
-  {title:'单调栈 / 单调结构', desc:'目标：把“下标、弹栈条件、答案结算”练成固定动作。', problems:[['2559','Largest Rectangle in a Histogram'],['4074','积水量'],['2019','Cornfields'],['2766','最大子矩阵']]}
+  {title:'单调栈 / 单调结构', desc:'目标：把“下标、弹栈条件、答案结算”练成固定动作。', problems:[['2559','Largest Rectangle in a Histogram'],['4074','积水量'],['2019','Cornfields'],['2766','最大子矩阵']]},
+  {title:'二阶段 · 贪心', desc:'继续补“排序后扫描”“区间选择”“局部决策”这类机考高频题。', phase:'二阶段', prefix:'B2', problems:[['1094','Sorting It All Out'],['2299','Ultra-QuickSort'],['2993','区间'],['2996','选课'],['3181','Pizza schedule']]},
+  {title:'二阶段 · DP', desc:'强调线性 DP、背包、序列型 DP，补足机考后段的状态定义能力。', phase:'二阶段', prefix:'B2', problems:[['1163','The Triangle'],['1170','Shopping Offers'],['2726','采药'],['2727','还是采药问题'],['2755','神奇的口袋'],['2760','数字三角形'],['2773','采药'],['4149','课程大作业']]},
+  {title:'二阶段 · 搜索：BFS / DFS / 状态搜索', desc:'第二批更偏迷宫、图搜索和“模型识别”，适合混合训练。', phase:'二阶段', prefix:'B2', problems:[['1103','Maze'],['1522','N-Credible Mazes'],['1858','Interesting Maze Game'],['2157','Maze'],['2644','Maze'],['2790','迷宫'],['3435','Borg Maze'],['4063','DFS spanning tree']]},
+  {title:'二阶段 · 二分', desc:'继续打边界感和判定函数，避免二分在考场里变成情绪崩点。', phase:'二阶段', prefix:'B2', problems:[['1757','Binary Search'],['2774','木材加工'],['2388','寻找中位数'],['4145','放弃考试']]},
+  {title:'二阶段 · 结构体排序 / STL', desc:'更适合作为第二轮补池：多关键字排序、队列和基础结构维护。', phase:'二阶段', prefix:'B2', problems:[['2752','字符串数组排序问题'],['2915','字符串排序'],['2998','日志排序'],['3245','空调排名'],['3672','比赛排名'],['3702','距离排序'],['4084','拓扑排序'],['3861','Queue']]},
+  {title:'二阶段 · 单调栈 / 单调结构', desc:'补强“下标、弹栈、窗口、候选维护”的稳定性。', phase:'二阶段', prefix:'B2', problems:[['4077','出栈序列统计'],['2469',"Stack 'em Up"],['2259','Team Queue'],['2482','Stars in Your Window']]},
+  {title:'二阶段 · 字符串 / 实现补强', desc:'这组更偏机考真题味道，适合拿来练读题、实现和调试节奏。', phase:'二阶段', prefix:'B2', problems:[['1200','Crazy Search'],['1501','Word-Search Wonder'],['1674','Sorting by Swapping'],['2050','Searching the Web'],['2406','字符串乘方'],['2743','字符串判等'],['4007','计算字符串距离'],['4042','Rabin-Karp字符串匹配'],['4073','最长公共字符串后缀']]}
 ].map(section => ({
   ...section,
-  problems: section.problems.map(([id, name]) => ({ id: `B${id}`, rawId: id, name, url: `http://bailian.openjudge.cn/practice/${id}/` }))
+  phase: section.phase || '一阶段',
+  problems: section.problems.map(([id, name]) => ({ id: `${section.prefix || 'B'}${id}`, rawId: id, name, phase: section.phase || '一阶段', url: `http://bailian.openjudge.cn/practice/${id}/` }))
 }));
 const BAILIAN_TOTAL = BAILIAN_SECTIONS.reduce((sum, section) => sum + section.problems.length, 0);
 const STORAGE_KEY = 'kotori-luogu-v1';
@@ -723,7 +731,10 @@ function renderBailian() {
         <h2>🔥 百炼成钢</h2>
         <p>百炼机考训练题单。每题都支持完成状态、重点标记、错题记录和反思总结。</p>
       </div>
-      <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">打开原题单</a>
+      <div class="bailian-header-actions">
+        <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">一阶段题单</a>
+        <a class="btn btn-secondary btn-sm" href="bailian_training_set_round2.html" target="_blank" rel="noreferrer">二阶段题单</a>
+      </div>
     </div>
     <div class="bailian-stats">
       <span>✅ ${done}/${BAILIAN_TOTAL} 完成</span>
@@ -767,6 +778,7 @@ function renderBailianProblem(p) {
       <div class="problem-info">
         <span class="problem-id"><a href="${p.url}" target="_blank">${p.rawId}</a></span>
         <span class="problem-name">${escHtml(p.name)}</span>
+        <span class="badge badge-custom">${escHtml(p.phase)}</span>
       </div>
       <div class="status-selector">
         ${bailianStatusBtn(p.id,'not_started','⬜ 未做',s)}
