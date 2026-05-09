@@ -154,6 +154,7 @@ let state = {
   bailianReflections: {},
   bailianStarred: {},
   collapsedCards: {},
+  openSections: {},
   settings: {
     obsidianVault: 'Obsidian Vault',
     obsidianFolder: '',
@@ -182,7 +183,7 @@ function load() {
       if (!state.bailianReflections) state.bailianReflections = {};
       if (!state.bailianStarred) state.bailianStarred = {};
       if (!state.collapsedCards) state.collapsedCards = {};
-      if (!state.collapsedCards) state.collapsedCards = {};
+      if (!state.openSections) state.openSections = {};
     }
   } catch(e) { console.warn('Load failed', e); }
 }
@@ -293,6 +294,17 @@ function toggleBailianStar(pid) {
   save(); renderBailian();
 }
 
+function isSectionOpen(id) {
+  return !!(state.openSections && state.openSections[id]);
+}
+
+function setSectionOpen(id, isOpen) {
+  if (!state.openSections) state.openSections = {};
+  state.openSections[id] = isOpen;
+  if (!isOpen) delete state.openSections[id];
+  save();
+}
+
 function isCardCollapsed(key) {
   return !!(state.collapsedCards && state.collapsedCards[key]);
 }
@@ -399,6 +411,8 @@ function renderProblemCard(p, dayNum, isCustom) {
   const note = state.notes[p.id] || '';
   const wn = state.wrongNotes[p.id] || {};
   const isStarred = !!state.starred[p.id];
+  const noteOpen = isSectionOpen(`note-${p.id}`);
+  const wrongOpen = isSectionOpen(`wrong-${p.id}`);
   const badges = [];
   if (p.mustReview) badges.push('<span class="badge badge-review">⭐ 需二刷</span>');
   if (p.optional) badges.push('<span class="badge badge-optional">选做</span>');
@@ -426,10 +440,10 @@ function renderProblemCard(p, dayNum, isCustom) {
     ${p.desc ? `<div class="problem-desc">${escHtml(p.desc)}</div>` : ''}
     <div class="problem-actions">
       <button class="star-toggle${isStarred?' starred':''}" data-star="${p.id}">${isStarred?'⭐ 重点':'☆ 标记重点'}</button>
-      <button class="expand-toggle${note?' open':''}" data-target="note-${p.id}">📝 笔记${note?' (有内容)':''}</button>
-      <button class="expand-toggle${(wn.error||wn.correct)?' open':''}" data-target="wrong-${p.id}">📕 错题记录</button>
+      <button class="expand-toggle${noteOpen?' open':''}" data-target="note-${p.id}">📝 笔记${note?' (有内容)':''}</button>
+      <button class="expand-toggle${wrongOpen?' open':''}" data-target="wrong-${p.id}">📕 错题记录</button>
     </div>
-    <div class="expandable" id="note-${p.id}">
+    <div class="expandable${noteOpen?' open':''}" id="note-${p.id}">
       <div class="note-area">
         ${note ? `<div class="note-collapsed-preview" data-note-expand="${p.id}">${renderMarkdown(note)}</div>` : ''}
         <div class="note-edit-area" id="note-edit-${p.id}" style="${note?'display:none':''}">
@@ -442,7 +456,7 @@ function renderProblemCard(p, dayNum, isCustom) {
         </div>
       </div>
     </div>
-    <div class="expandable${(wn.error||wn.correct)?' open':''}" id="wrong-${p.id}">
+    <div class="expandable${wrongOpen?' open':''}" id="wrong-${p.id}">
       <div class="wrong-area">
         <label>错误原因</label>
         <textarea placeholder="第一次做错在哪里？" data-wrong-error="${p.id}">${escHtml(wn.error||'')}</textarea>
@@ -773,6 +787,8 @@ function renderBailianProblem(p) {
   const wn = state.bailianWrongNotes[p.id] || {};
   const reflection = state.bailianReflections[p.id] || '';
   const isStarred = !!state.bailianStarred[p.id];
+  const wrongOpen = isSectionOpen(`bailian-wrong-${p.id}`);
+  const reflectionOpen = isSectionOpen(`bailian-reflection-${p.id}`);
   return `<article class="problem-card bailian-problem status-${s}" data-bailian-pid="${p.id}">
     <div class="problem-top">
       <div class="problem-info">
@@ -788,10 +804,10 @@ function renderBailianProblem(p) {
     </div>
     <div class="problem-actions">
       <button class="star-toggle${isStarred?' starred':''}" data-bailian-star="${p.id}">${isStarred?'⭐ 重点':'☆ 标记重点'}</button>
-      <button class="expand-toggle${(wn.error||wn.correct||wn.keywords)?' open':''}" data-target="bailian-wrong-${p.id}">📕 错题记录</button>
-      <button class="expand-toggle${reflection?' open':''}" data-target="bailian-reflection-${p.id}">📝 反思总结${reflection?' (有内容)':''}</button>
+      <button class="expand-toggle${wrongOpen?' open':''}" data-target="bailian-wrong-${p.id}">📕 错题记录</button>
+      <button class="expand-toggle${reflectionOpen?' open':''}" data-target="bailian-reflection-${p.id}">📝 反思总结${reflection?' (有内容)':''}</button>
     </div>
-    <div class="expandable${(wn.error||wn.correct||wn.keywords)?' open':''}" id="bailian-wrong-${p.id}">
+    <div class="expandable${wrongOpen?' open':''}" id="bailian-wrong-${p.id}">
       <div class="wrong-area">
         <label>错误原因</label>
         <textarea placeholder="这题卡在哪里？是读题、边界、模型还是实现？" data-bailian-wrong-error="${p.id}">${escHtml(wn.error||'')}</textarea>
@@ -801,7 +817,7 @@ function renderBailianProblem(p) {
         <textarea placeholder="下次看到什么信号要想到这题？" data-bailian-wrong-keywords="${p.id}" style="min-height:40px">${escHtml(wn.keywords||'')}</textarea>
       </div>
     </div>
-    <div class="expandable${reflection?' open':''}" id="bailian-reflection-${p.id}">
+    <div class="expandable${reflectionOpen?' open':''}" id="bailian-reflection-${p.id}">
       <div class="note-area">
         <div class="note-toolbar">
           <button class="note-tool-btn" data-bailian-preview="${p.id}">👁 预览</button>
@@ -956,6 +972,7 @@ function importData(file) {
       if (!state.bailianWrongNotes) state.bailianWrongNotes = {};
       if (!state.bailianReflections) state.bailianReflections = {};
       if (!state.bailianStarred) state.bailianStarred = {};
+      if (!state.openSections) state.openSections = {};
       save();
       applyBackground();
       renderMusic();
@@ -1057,6 +1074,7 @@ function setupEvents() {
       if (editArea) {
         collapsed.style.display = 'none';
         editArea.style.display = '';
+        setSectionOpen('note-' + pid, true);
         const ta = editArea.querySelector('textarea');
         if (ta) ta.focus();
       }
@@ -1067,7 +1085,10 @@ function setupEvents() {
     if (toggle) {
       toggle.classList.toggle('open');
       const target = document.getElementById(toggle.dataset.target);
-      if (target) target.classList.toggle('open');
+      if (target) {
+        const isOpen = target.classList.toggle('open');
+        setSectionOpen(target.id, isOpen);
+      }
       return;
     }
 
@@ -1192,7 +1213,10 @@ function setupEvents() {
     if (toggle) {
       toggle.classList.toggle('open');
       const target = document.getElementById(toggle.dataset.target);
-      if (target) target.classList.toggle('open');
+      if (target) {
+        const isOpen = target.classList.toggle('open');
+        setSectionOpen(target.id, isOpen);
+      }
     }
   });
 
