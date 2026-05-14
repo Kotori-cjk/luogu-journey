@@ -746,8 +746,12 @@ function renderBailian() {
         <p>百炼机考训练题单。每题都支持完成状态、重点标记、错题记录和反思总结。</p>
       </div>
       <div class="bailian-header-actions">
-        <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">一阶段题单</a>
-        <a class="btn btn-secondary btn-sm" href="bailian_training_set_round2.html" target="_blank" rel="noreferrer">二阶段题单</a>
+        <a class="btn btn-secondary btn-sm" href="bailian_hub.html" target="_blank" rel="noreferrer">????</a>
+        <a class="btn btn-secondary btn-sm" href="bailian_dp_greedy_notes.html" target="_blank" rel="noreferrer">DP / ????</a>
+        <a class="btn btn-secondary btn-sm" href="zhuanshuer_2024_links.html" target="_blank" rel="noreferrer">2024 ??</a>
+        <a class="btn btn-secondary btn-sm" href="zhuanshuer_2025_links.html" target="_blank" rel="noreferrer">2025 ??</a>
+        <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">?????</a>
+        <a class="btn btn-secondary btn-sm" href="bailian_training_set_round2.html" target="_blank" rel="noreferrer">?????</a>
       </div>
     </div>
     <div class="bailian-stats">
