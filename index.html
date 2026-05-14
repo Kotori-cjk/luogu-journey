@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -17,20 +17,20 @@
         <header id="header">
             <div class="header-left">
                 <h1 class="site-title">Kotori's Journey of Luogu</h1>
-                <p class="subtitle">14 天算法修炼之旅</p>
+                <p class="subtitle">14 澶╃畻娉曚慨鐐间箣鏃?/p>
             </div>
             <div class="header-right">
-                <a id="obsidian-link" class="header-btn" title="打开Obsidian笔记">
-                    <span class="btn-icon">📒</span> Obsidian
+                <a id="obsidian-link" class="header-btn" title="鎵撳紑Obsidian绗旇">
+                    <span class="btn-icon">馃搾</span> Obsidian
                 </a>
-                <a id="github-link" class="header-btn" title="GitHub仓库" target="_blank">
-                    <span class="btn-icon">🐱</span> GitHub
+                <a id="github-link" class="header-btn" title="GitHub浠撳簱" target="_blank">
+                    <span class="btn-icon">馃惐</span> GitHub
                 </a>
-                <button id="settings-btn" class="header-btn" title="设置">
-                    <span class="btn-icon">⚙️</span> 设置
+                <button id="settings-btn" class="header-btn" title="璁剧疆">
+                    <span class="btn-icon">鈿欙笍</span> 璁剧疆
                 </button>
-                <button id="bg-view-btn" class="header-btn" title="观赏背景">
-                    <span class="btn-icon">🖼️</span> 观赏
+                <button id="bg-view-btn" class="header-btn" title="瑙傝祻鑳屾櫙">
+                    <span class="btn-icon">馃柤锔?/span> 瑙傝祻
                 </button>
             </div>
         </header>
@@ -38,7 +38,7 @@
         <div class="main-layout">
             <aside id="sidebar">
                 <div class="sidebar-section">
-                    <h3>📊 刷题进度</h3>
+                    <h3>馃搳 鍒烽杩涘害</h3>
                     <div class="progress-ring-container">
                         <svg class="progress-ring" viewBox="0 0 120 120">
                             <circle class="progress-ring-bg" cx="60" cy="60" r="52"/>
@@ -48,46 +48,46 @@
                         </svg>
                     </div>
                     <div class="progress-stats">
-                        <span class="stat stat-done" id="stat-completed">✅ 0 完成</span>
-                        <span class="stat stat-wrong" id="stat-wrong">❌ 0 错题</span>
-                        <span class="stat stat-review" id="stat-review">⭐ 0/8 二刷</span>
+                        <span class="stat stat-done" id="stat-completed">鉁?0 瀹屾垚</span>
+                        <span class="stat stat-wrong" id="stat-wrong">鉂?0 閿欓</span>
+                        <span class="stat stat-review" id="stat-review">猸?0/8 浜屽埛</span>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
-                    <h3>📅 训练日程</h3>
+                    <h3>馃搮 璁粌鏃ョ▼</h3>
                     <div id="day-nav" class="day-nav"></div>
                 </div>
 
                 <div class="sidebar-section">
-                    <h3>📚 笔记</h3>
+                    <h3>馃摎 绗旇</h3>
                     <div class="note-nav">
-                        <a class="note-link" href="notes/chapter1.html" target="_blank">📘 Chapter 1</a>
-                        <a class="note-link" href="notes/chapter2.html" target="_blank">📗 Chapter 2</a>
-                        <a class="note-link" href="notes/chapter3.html" target="_blank">📙 Chapter 3</a>
-                        <a class="note-link" href="notes/chapter4.html" target="_blank">📕 Chapter 4</a>
-                        <a class="note-link" href="notes/chapter5.html" target="_blank">📔 Chapter 5</a>
-                        <a class="note-link" href="notes/chapter6.html" target="_blank">📓 Chapter 6</a>
-                        <a class="note-link" href="notes/luogu-review.html" target="_blank" style="border-color:var(--warm);background:#FFF8E1">📊 刷题复盘</a>
+                        <a class="note-link" href="notes/chapter1.html" target="_blank">馃摌 Chapter 1</a>
+                        <a class="note-link" href="notes/chapter2.html" target="_blank">馃摋 Chapter 2</a>
+                        <a class="note-link" href="notes/chapter3.html" target="_blank">馃摍 Chapter 3</a>
+                        <a class="note-link" href="notes/chapter4.html" target="_blank">馃摃 Chapter 4</a>
+                        <a class="note-link" href="notes/chapter5.html" target="_blank">馃摂 Chapter 5</a>
+                        <a class="note-link" href="notes/chapter6.html" target="_blank">馃摀 Chapter 6</a>
+                        <a class="note-link" href="notes/luogu-review.html" target="_blank" style="border-color:var(--warm);background:#FFF8E1">馃搳 鍒烽澶嶇洏</a>
                     </div>
                 </div>
 
                 <div class="sidebar-section music-section">
-                    <h3>🎵 音乐</h3>
+                    <h3>馃幍 闊充箰</h3>
                     <div id="music-container">
-                        <p class="empty-hint">在设置中添加网易云音乐~</p>
+                        <p class="empty-hint">鍦ㄨ缃腑娣诲姞缃戞槗浜戦煶涔悀</p>
                     </div>
                 </div>
             </aside>
 
             <main id="main-content">
                 <div class="tabs">
-                    <button class="tab active" data-tab="plan">📋 每日计划</button>
-                    <button class="tab" data-tab="wrong">📕 错题本</button>
-                    <button class="tab" data-tab="journal">💭 每日感想</button>
-                    <button class="tab" data-tab="star">💡 思维新方法</button>
-                    <button class="tab" data-tab="think">🧠 思考空间</button>
-                    <button class="tab" data-tab="bailian">🔥 百炼成钢</button>
+                    <button class="tab active" data-tab="plan">馃搵 姣忔棩璁″垝</button>
+                    <button class="tab" data-tab="wrong">馃摃 閿欓鏈?/button>
+                    <button class="tab" data-tab="journal">馃挱 姣忔棩鎰熸兂</button>
+                    <button class="tab" data-tab="star">馃挕 鎬濈淮鏂版柟娉?/button>
+                    <button class="tab" data-tab="think">馃 鎬濊€冪┖闂?/button>
+                    <button class="tab" data-tab="bailian">馃敟 鐧剧偧鎴愰挗</button>
                 </div>
 
                 <div id="tab-plan" class="tab-content active"></div>
@@ -99,12 +99,12 @@
                     <section class="bailian-embed-card">
                         <div class="bailian-embed-head">
                             <div>
-                                <h2>🔥 百炼成钢</h2>
-                                <p>百炼机考训练题单，按专题整理，点击题目会在新窗口打开 OpenJudge 百炼页面。</p>
+                                <h2>馃敟 鐧剧偧鎴愰挗</h2>
+                                <p>鐧剧偧鏈鸿€冭缁冮鍗曪紝鎸変笓棰樻暣鐞嗭紝鐐瑰嚮棰樼洰浼氬湪鏂扮獥鍙ｆ墦寮€ OpenJudge 鐧剧偧椤甸潰銆?/p>
                             </div>
-                            <a class="btn btn-secondary btn-sm" href="bailian_training_set.html" target="_blank" rel="noreferrer">单独打开</a>
+                            <a class="btn btn-secondary btn-sm" href="bailian_hub.html" target="_blank" rel="noreferrer">鍗曠嫭鎵撳紑</a>
                         </div>
-                        <iframe class="bailian-iframe" src="bailian_training_set.html" title="百炼成钢训练题单"></iframe>
+                        <iframe class="bailian-iframe" src="bailian_hub.html" title="鐧剧偧鎴愰挗璁粌棰樺崟"></iframe>
                     </section>
                 </div>
             </main>
@@ -116,45 +116,45 @@
         <div class="modal-overlay"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <h2>⚙️ 设置</h2>
+                <h2>鈿欙笍 璁剧疆</h2>
                 <button class="modal-close" data-modal="settings-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="settings-group">
-                    <h3>📒 Obsidian 笔记</h3>
-                    <label>Vault 名称</label>
+                    <h3>馃搾 Obsidian 绗旇</h3>
+                    <label>Vault 鍚嶇О</label>
                     <input type="text" id="set-obsidian-vault" placeholder="Obsidian Vault">
-                    <label>笔记文件夹路径（Vault 内相对路径）</label>
-                    <input type="text" id="set-obsidian-folder" placeholder="例：算法笔记">
+                    <label>绗旇鏂囦欢澶硅矾寰勶紙Vault 鍐呯浉瀵硅矾寰勶級</label>
+                    <input type="text" id="set-obsidian-folder" placeholder="渚嬶細绠楁硶绗旇">
                 </div>
                 <div class="settings-group">
-                    <h3>🐱 GitHub 仓库</h3>
-                    <label>仓库链接</label>
+                    <h3>馃惐 GitHub 浠撳簱</h3>
+                    <label>浠撳簱閾炬帴</label>
                     <input type="text" id="set-github-repo" placeholder="https://github.com/username/repo">
                 </div>
                 <div class="settings-group">
-                    <h3>🎨 背景图片</h3>
+                    <h3>馃帹 鑳屾櫙鍥剧墖</h3>
                     <div class="bg-upload-area" id="bg-upload-area">
                         <input type="file" id="bg-upload" accept="image/*" multiple hidden>
-                        <button class="btn btn-accent" onclick="document.getElementById('bg-upload').click()">📷 上传图片</button>
-                        <span class="upload-hint">支持 JPG / PNG，可上传多张切换</span>
+                        <button class="btn btn-accent" onclick="document.getElementById('bg-upload').click()">馃摲 涓婁紶鍥剧墖</button>
+                        <span class="upload-hint">鏀寔 JPG / PNG锛屽彲涓婁紶澶氬紶鍒囨崲</span>
                     </div>
                     <div id="bg-preview-list" class="bg-preview-list"></div>
-                    <button id="bg-reset-btn" class="btn btn-secondary">恢复默认背景</button>
+                    <button id="bg-reset-btn" class="btn btn-secondary">鎭㈠榛樿鑳屾櫙</button>
                 </div>
                 <div class="settings-group">
-                    <h3>🎵 网易云音乐</h3>
+                    <h3>馃幍 缃戞槗浜戦煶涔?/h3>
                     <div class="music-add-row">
-                        <input type="text" id="music-input" placeholder="粘贴网易云音乐歌曲链接或ID">
-                        <button id="music-add-btn" class="btn btn-primary">添加</button>
+                        <input type="text" id="music-input" placeholder="绮樿创缃戞槗浜戦煶涔愭瓕鏇查摼鎺ユ垨ID">
+                        <button id="music-add-btn" class="btn btn-primary">娣诲姞</button>
                     </div>
                     <div id="music-manage-list" class="music-manage-list"></div>
                 </div>
                 <div class="settings-group">
-                    <h3>💾 数据管理</h3>
+                    <h3>馃捑 鏁版嵁绠＄悊</h3>
                     <div class="data-actions">
-                        <button id="export-btn" class="btn btn-secondary">📤 导出数据</button>
-                        <button id="import-btn" class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
+                        <button id="export-btn" class="btn btn-secondary">馃摛 瀵煎嚭鏁版嵁</button>
+                        <button id="import-btn" class="btn btn-secondary" onclick="document.getElementById('import-file').click()">馃摜 瀵煎叆鏁版嵁</button>
                         <input type="file" id="import-file" accept=".json" hidden>
                     </div>
                 </div>
@@ -163,7 +163,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <button class="bg-view-exit" id="bg-view-exit">🖼️ 点击或按 Esc 退出观赏</button>
+    <button class="bg-view-exit" id="bg-view-exit">馃柤锔?鐐瑰嚮鎴栨寜 Esc 閫€鍑鸿璧?/button>
     <script src="app.js"></script>
 </body>
 </html>
+
